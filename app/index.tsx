@@ -8,46 +8,50 @@ const Index = () => {
   const router = useRouter();
 
   return (
-    <View className="flex-1 px-6 items-center justify-center bg-white">
+    <View className="flex-1 bg-white px-6">
       
-      <Pressable
-        onLongPress={() => router.push("/unlock")}
-        delayLongPress={800}
-      >
-        <AppLogo size={120} />
-      </Pressable>
+      <View className="flex-1 items-center justify-center">
+        <Pressable
+          onLongPress={() => router.push("/unlock")}
+          delayLongPress={800}
+          className="mb-8"
+        >
+          <AppLogo size={120} />
+        </Pressable>
 
-      <Text className="text-[28px] font-extrabold text-[#010100] text-center mb-2 tracking-[-0.5px]">
-        {config.appName}
-      </Text>
-
-      <Text className="text-base text-[#101010] text-center mb-12 leading-[22px] max-w-[280px]">
-        {config.appTagLine}
-      </Text>
-
-      <Pressable
-        className="bg-[#010100] px-8 py-4 rounded-xl shadow-lg shadow-black/15 elevation-8"
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.8 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-        })}
-        onPress={() => router.push("/meditation")}
-      >
-        <Text className="text-[#e0e0e0] text-base font-semibold tracking-[0.5px] text-center">
-          Get Started
+        <Text className="text-[28px] font-extrabold text-[#010100] text-center tracking-[-0.5px] mb-3">
+          {config.appName}
         </Text>
-      </Pressable>
 
-      <View className="absolute bottom-8">
-        <Text className="text-xs text-[#101010] text-center">
+        <Text className="text-[15px] text-[#101010] text-center leading-[22px] max-w-[300px] mb-10">
+          {config.appTagLine}
+        </Text>
+
+        <Pressable
+          className="bg-[#010100] w-full max-w-[260px] py-4 rounded-xl shadow-lg shadow-black/15 elevation-8"
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.85 : 1,
+            transform: [{ scale: pressed ? 0.97 : 1 }],
+          })}
+          onPress={() => router.push("/meditation")}
+        >
+          <Text className="text-[#e0e0e0] text-base font-semibold tracking-[0.5px] text-center">
+            Get Started
+          </Text>
+        </Pressable>
+
+      </View>
+
+      <View className="pb-8 items-center">
+        <Text className="text-[12px] text-[#101010] text-center">
           Designed & Developed by{" "}
           <Text
             className="text-[#010100] font-semibold"
             onPress={() =>
-              Linking.openURL("https://github.com/ashutosh887")
+              Linking.openURL(config.appAuthorUrl)
             }
           >
-            ashutosh887 🇮🇳
+            {config.appAuthor} 🇮🇳
           </Text>
         </Text>
       </View>
