@@ -1,11 +1,9 @@
 export type IncidentRecord = {
   id: string;
   createdAt: number;
-
-  // Raw user narrative (voice → text)
   narrative: string;
-
-  // AI / logic extracted fields (optional, progressive)
+  audioUri: string;
+  transcript?: string;
   extracted: {
     time?: string;
     location?: string;
@@ -14,8 +12,6 @@ export type IncidentRecord = {
     childrenPresent?: boolean;
     priorIncidents?: boolean;
   };
-
-  // Safety / escalation signals
   flags: {
     escalation?: boolean;
     imminentRisk?: boolean;

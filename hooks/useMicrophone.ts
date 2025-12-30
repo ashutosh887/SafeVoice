@@ -12,16 +12,13 @@ export function useMicrophone() {
 
     (async () => {
       const current = await getRecordingPermissionsAsync();
-
       if (current.status === "granted") {
         if (mounted) setGranted(true);
         return;
       }
 
       const requested = await requestRecordingPermissionsAsync();
-      if (mounted) {
-        setGranted(requested.granted);
-      }
+      if (mounted) setGranted(requested.granted);
     })();
 
     return () => {

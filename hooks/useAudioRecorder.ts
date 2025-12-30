@@ -1,106 +1,85 @@
+import { stopActivePlayback } from "@/lib/audioPlayback";
 import { Audio } from "expo-av";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+let globalRecording: Audio.Recording | null = null;
+let globalPreparing = false;
 
 export function useAudioRecorder() {
   const recordingRef = useRef<Audio.Recording | null>(null);
-  const busyRef = useRef(false);
-  const meterIntervalRef = useRef<number | null>(null);
-
-  const [isRecording, setIsRecording] = useState(false);
   const [level, setLevel] = useState(0);
 
+  useEffect(() => {
+    return () => {
+      if (recordingRef.current) {
+        recordingRef.current.stopAndUnloadAsync().catch(() => {});
+        recordingRef.current = null;
+        globalRecording = null;
+      }
+    };
+  }, []);
+
   const startRecording = async () => {
-    if (busyRef.current || recordingRef.current) return;
-    busyRef.current = true;
+    if (globalPreparing || globalRecording) return;
 
-    const permission = await Audio.requestPermissionsAsync();
-    if (!permission.granted) {
-      busyRef.current = false;
-      throw new Error("Microphone permission not granted");
-    }
+    globalPreparing = true;
 
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
-    });
+    try {
+      await stopActivePlayback();
 
-    const recording = new Audio.Recording();
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) return;
 
-    await recording.prepareToRecordAsync({
-      android: {
-        extension: ".m4a",
-        outputFormat:
-          Audio.AndroidOutputFormat.MPEG_4,
-        audioEncoder:
-          Audio.AndroidAudioEncoder.AAC,
-        sampleRate: 44100,
-        numberOfChannels: 1,
-        bitRate: 128000,
-        isMeteringEnabled: true,
-      },
-      ios: {
-        extension: ".m4a",
-        audioQuality:
-          Audio.IOSAudioQuality.HIGH,
-        sampleRate: 44100,
-        numberOfChannels: 1,
-        bitRate: 128000,
-        linearPCMBitDepth: 16,
-        linearPCMIsBigEndian: false,
-        linearPCMIsFloat: false,
-      },
-      web: {},
-      isMeteringEnabled: true,
-    } as Audio.RecordingOptions);
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+      });
 
-    await recording.startAsync();
+      const recording = new Audio.Recording();
 
-    recordingRef.current = recording;
-    setIsRecording(true);
+      recording.setOnRecordingStatusUpdate((s) => {
+        if (s.metering != null) {
+          setLevel(Math.max(0, s.metering + 60) / 60);
+        }
+      });
 
-    meterIntervalRef.current = setInterval(async () => {
-      const status = await recording.getStatusAsync();
-      if (
-        !status.isRecording ||
-        typeof status.metering !== "number"
-      )
-        return;
-
-      const normalized = Math.min(
-        Math.max((status.metering + 60) / 60, 0),
-        1
+      await recording.prepareToRecordAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
 
-      setLevel(normalized);
-    }, 100);
+      await recording.startAsync();
 
-    busyRef.current = false;
-  };
-
-  const stopRecording = async (): Promise<string | null> => {
-    if (busyRef.current || !recordingRef.current) return null;
-    busyRef.current = true;
-
-    if (meterIntervalRef.current !== null) {
-      clearInterval(meterIntervalRef.current);
-      meterIntervalRef.current = null;
+      recordingRef.current = recording;
+      globalRecording = recording;
+    } catch {
+      if (recordingRef.current) {
+        try {
+          await recordingRef.current.stopAndUnloadAsync();
+        } catch {}
+        recordingRef.current = null;
+        globalRecording = null;
+      }
+    } finally {
+      globalPreparing = false;
     }
+  };
 
-    await recordingRef.current.stopAndUnloadAsync();
-    const uri = recordingRef.current.getURI();
+  const stopRecording = async () => {
+    if (!recordingRef.current) return null;
 
+    const rec = recordingRef.current;
     recordingRef.current = null;
-    setIsRecording(false);
-    setLevel(0);
-    busyRef.current = false;
+    globalRecording = null;
 
-    return uri ?? null;
+    try {
+      await rec.stopAndUnloadAsync();
+      setLevel(0);
+      return rec.getURI();
+    } catch {
+      return null;
+    }
   };
 
-  return {
-    isRecording,
-    level,
-    startRecording,
-    stopRecording,
-  };
+  return { startRecording, stopRecording, level };
 }

@@ -8,74 +8,64 @@ import { useIncidentStore } from "@/store/useIncidentStore";
 import { IncidentRecord } from "@/types/incident";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
-type ListenState = "idle" | "listening" | "stopped";
+type ListenState = "idle" | "listening" | "saved";
 
 export default function Listen() {
   const router = useRouter();
   const micGranted = useMicrophone();
+  const { startRecording, stopRecording, level } = useAudioRecorder();
+  const addIncident = useIncidentStore((s) => s.addIncident);
 
-  const { startRecording, stopRecording, level } =
-    useAudioRecorder();
+  const [state, setState] = useState<ListenState>("idle");
+  const pressLockRef = useRef(false);
 
-  const addIncident = useIncidentStore(
-    (s) => s.addIncident
-  );
+  const saveAndStop = async () => {
+    const uri = await stopRecording();
+    if (!uri) return;
 
-  const [listenState, setListenState] =
-    useState<ListenState>("idle");
+    const incident: IncidentRecord = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: Date.now(),
+      narrative: "Voice recording",
+      audioUri: uri,
+      extracted: {},
+      flags: {},
+    };
+
+    addIncident(incident);
+    setState("saved");
+  };
 
   const handleWavePress = async () => {
-    await Haptics.impactAsync(
-      Haptics.ImpactFeedbackStyle.Light
-    );
+    if (pressLockRef.current) return;
+    pressLockRef.current = true;
 
-    if (listenState === "idle") {
-      await startRecording();
-      setListenState("listening");
-      return;
-    }
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    if (listenState === "listening") {
-      await stopRecording();
+      if (state === "idle" || state === "saved") {
+        setState("listening");
+        await startRecording();
+        return;
+      }
 
-      const incident: IncidentRecord = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        createdAt: Date.now(),
-        narrative: "Voice note recorded",
-        extracted: {},
-        flags: {},
-      };
-
-      addIncident(incident);
-      setListenState("stopped");
-      return;
-    }
-
-    if (listenState === "stopped") {
-      await startRecording();
-      setListenState("listening");
+      if (state === "listening") {
+        await saveAndStop();
+      }
+    } finally {
+      pressLockRef.current = false;
     }
   };
 
-  if (micGranted === false) {
+  if (micGranted !== true) {
     return (
       <SafeScreen>
         <QuickExit />
         <Text className="mt-24 text-center text-sm text-gray-500">
-          Microphone access is required
-        </Text>
-      </SafeScreen>
-    );
-  }
-
-  if (micGranted === null) {
-    return (
-      <SafeScreen>
-        <Text className="mt-24 text-center text-sm text-gray-500">
-          Preparing microphone…
+          Microphone access required
         </Text>
       </SafeScreen>
     );
@@ -89,29 +79,32 @@ export default function Listen() {
         <CircleInherit size="lg">
           <VoiceWave
             size="lg"
-            state={listenState}
+            state={state === "saved" ? "stopped" : state}
             level={level}
             onPress={handleWavePress}
           />
         </CircleInherit>
 
-        <Text className="mt-6 text-sm text-gray-500">
-          {listenState === "idle" && "Tap to start recording"}
-          {listenState === "listening" && "Listening… tap to stop"}
-          {listenState === "stopped" && "Saved"}
+        <Text className="mt-6 text-sm text-gray-500 text-center">
+          {state === "idle" && "Tap to start recording"}
+          {state === "listening" && "Listening… tap to stop"}
+          {state === "saved" && "Saved · Tap to record again"}
         </Text>
 
         <Pressable
           onPress={async () => {
             await Haptics.impactAsync(
-              Haptics.ImpactFeedbackStyle.Light
+              Haptics.ImpactFeedbackStyle.Medium
             );
+            if (state === "listening") {
+              await saveAndStop();
+            }
             router.replace("/session/end");
           }}
           className="bg-black px-6 py-3 rounded-xl w-[200px] mt-12"
         >
           <Text className="text-white text-center font-medium">
-            End
+            End Session
           </Text>
         </Pressable>
       </View>
