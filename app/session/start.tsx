@@ -17,17 +17,15 @@ export default function StartSession() {
           <Mic size={22} color="#52525b" />
         </VoiceCircle>
 
-        <Text className="text-gray-500 mt-6 mb-2 text-center">
-          We’ll listen when you’re ready.
-        </Text>
-
-        <Text className="text-center mb-8">
-          You can stop anytime. Nothing is stored on your phone.
+        <Text className="text-gray-500 mt-8 mb-10 text-center">
+          Speak when you’re ready.
+          {"\n"}
+          You’re in control the whole time.
         </Text>
 
         <Pressable
           onPress={() => router.replace("/session/listen")}
-          className="bg-black px-6 py-3 rounded-xl"
+          className="bg-black px-8 py-3 rounded-xl"
         >
           <Text className="text-white font-medium">
             Start
