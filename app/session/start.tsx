@@ -1,7 +1,9 @@
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
+import VoiceCircle from "@/components/VoiceCircle";
 import { useRouter } from "expo-router";
-import { Pressable, Text } from "react-native";
+import { Mic } from "lucide-react-native";
+import { Pressable, Text, View } from "react-native";
 
 export default function StartSession() {
   const router = useRouter();
@@ -10,16 +12,28 @@ export default function StartSession() {
     <SafeScreen>
       <QuickExit />
 
-      <Text className="text-center mt-20 mb-6 px-6">
-        You can stop anytime. Nothing is stored on your phone.
-      </Text>
+      <View className="flex-1 items-center justify-center px-6">
+        <VoiceCircle>
+          <Mic size={22} color="#52525b" />
+        </VoiceCircle>
 
-      <Pressable
-        onPress={() => router.replace("/session/listen")}
-        className="bg-black px-6 py-3 rounded-xl self-center"
-      >
-        <Text className="text-white">Start</Text>
-      </Pressable>
+        <Text className="text-gray-500 mt-6 mb-2 text-center">
+          We’ll listen when you’re ready.
+        </Text>
+
+        <Text className="text-center mb-8">
+          You can stop anytime. Nothing is stored on your phone.
+        </Text>
+
+        <Pressable
+          onPress={() => router.replace("/session/listen")}
+          className="bg-black px-6 py-3 rounded-xl"
+        >
+          <Text className="text-white font-medium">
+            Start
+          </Text>
+        </Pressable>
+      </View>
     </SafeScreen>
   );
 }

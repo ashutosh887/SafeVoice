@@ -20,16 +20,16 @@ export default function QuickExit({ to = "/meditation" }: QuickExitProps) {
         right: 16,
         zIndex: 50,
         borderRadius: 999,
-        backgroundColor: "#fee2e2",
+        backgroundColor: "#fdecec",
         paddingHorizontal: 12,
         paddingVertical: 8,
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-        <Siren size={16} color="#b91c1c" />
+        <Siren size={14} color="#b91c1c" />
         <Text
           style={{
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: "600",
             color: "#b91c1c",
           }}
