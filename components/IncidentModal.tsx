@@ -6,12 +6,12 @@ import { IncidentRecord } from "@/types/incident";
 import { Pause, Play, X } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    Pressable,
-    ScrollView,
-    Text,
-    View,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
 
 type PlayerControls = {
@@ -43,8 +43,7 @@ export function IncidentModal({
   }, []);
 
   useEffect(() => {
-    if (!incident || incident.transcript || processing)
-      return;
+    if (!incident || incident.transcript || processing) return;
 
     const run = async () => {
       try {
@@ -110,6 +109,17 @@ export function IncidentModal({
     onClose();
   };
 
+  const row = (label: string, value: string) => (
+    <View>
+      <Text className="text-xs text-gray-500 mb-1">
+        {label}
+      </Text>
+      <Text className="text-sm text-gray-800">
+        {value}
+      </Text>
+    </View>
+  );
+
   return (
     <Modal transparent animationType="fade">
       <View className="flex-1 bg-black/40 justify-center px-6">
@@ -118,7 +128,6 @@ export function IncidentModal({
             <Text className="text-lg font-medium">
               Recorded Incident
             </Text>
-
             <Pressable onPress={handleClose} hitSlop={12}>
               <X size={20} color="#6b7280" />
             </Pressable>
@@ -140,7 +149,7 @@ export function IncidentModal({
 
           <ScrollView
             className="border border-gray-200 rounded-xl p-4"
-            contentContainerStyle={{ gap: 12 }}
+            contentContainerStyle={{ gap: 14 }}
           >
             {processing && (
               <View className="items-center py-8">
@@ -151,75 +160,90 @@ export function IncidentModal({
               </View>
             )}
 
-            {!processing && incident.summary && (
-              <View>
-                <Text className="text-xs text-gray-500 mb-1">
-                  Summary
-                </Text>
-                <Text className="text-sm text-gray-800">
-                  {incident.summary}
-                </Text>
-              </View>
-            )}
-
             {!processing &&
-              incident.extracted?.time && (
-                <Text className="text-sm text-gray-700">
-                  Time: {incident.extracted.time}
-                </Text>
+              row(
+                "Summary",
+                incident.summary ??
+                  "No concerning content detected."
               )}
 
             {!processing &&
-              incident.extracted?.location && (
-                <Text className="text-sm text-gray-700">
-                  Location:{" "}
-                  {incident.extracted.location}
-                </Text>
+              row(
+                "Time",
+                incident.extracted?.time ??
+                  "Not mentioned"
               )}
 
             {!processing &&
-              incident.extracted?.witnesses
-                ?.length && (
-                <Text className="text-sm text-gray-700">
-                  Witnesses:{" "}
-                  {incident.extracted.witnesses.join(
-                    ", "
-                  )}
-                </Text>
+              row(
+                "Location",
+                incident.extracted?.location ??
+                  "Not mentioned"
               )}
 
             {!processing &&
-              incident.extracted?.childrenPresent && (
-                <Text className="text-sm text-red-600">
-                  Children were present
-                </Text>
+              row(
+                "Actions",
+                incident.extracted?.actions?.length
+                  ? incident.extracted.actions.join(
+                      ", "
+                    )
+                  : "No actions detected"
               )}
 
             {!processing &&
-              incident.flags?.escalation && (
-                <Text className="text-sm text-red-600">
-                  Possible escalation detected
-                </Text>
+              row(
+                "Witnesses",
+                incident.extracted?.witnesses?.length
+                  ? incident.extracted.witnesses.join(
+                      ", "
+                    )
+                  : "No witnesses mentioned"
               )}
 
             {!processing &&
-              incident.flags?.imminentRisk && (
-                <Text className="text-sm text-red-700 font-medium">
-                  Immediate risk indicators present
-                </Text>
+              row(
+                "Children Present",
+                incident.extracted?.childrenPresent ===
+                  true
+                  ? "Yes"
+                  : incident.extracted
+                      ?.childrenPresent === false
+                  ? "No"
+                  : "Not mentioned"
               )}
 
             {!processing &&
-              incident.transcript && (
-                <View className="pt-2">
-                  <Text className="text-xs text-gray-500 mb-1">
-                    Full Transcript
-                  </Text>
-                  <Text className="text-sm text-gray-800">
-                    {incident.transcript}
-                  </Text>
-                </View>
+              row(
+                "Prior Incidents",
+                incident.extracted?.priorIncidents ===
+                  true
+                  ? "Yes"
+                  : incident.extracted
+                      ?.priorIncidents === false
+                  ? "No"
+                  : "Not mentioned"
               )}
+
+            {!processing &&
+              row(
+                "Escalation Risk",
+                incident.flags?.escalation
+                  ? "Possible escalation detected"
+                  : "No escalation detected"
+              )}
+
+            {!processing &&
+              row(
+                "Immediate Risk",
+                incident.flags?.imminentRisk
+                  ? "Immediate risk indicators present"
+                  : "No immediate risk detected"
+              )}
+
+            {!processing &&
+              incident.transcript &&
+              row("Full Transcript", incident.transcript)}
           </ScrollView>
         </View>
       </View>
