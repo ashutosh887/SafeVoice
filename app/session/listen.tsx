@@ -1,39 +1,71 @@
 import CircleInherit from "@/components/CircleInherit";
-import CrisisOverlay from "@/components/CrisisOverlay";
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
 import VoiceWave from "@/components/VoiceWave";
-import { useCrisisDetector } from "@/hooks/useCrisisDetector";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { useMicrophone } from "@/hooks/useMicrophone";
+import { useIncidentStore } from "@/store/useIncidentStore";
+import { IncidentRecord } from "@/types/incident";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+
+type ListenState = "idle" | "listening" | "stopped";
 
 export default function Listen() {
   const router = useRouter();
   const micGranted = useMicrophone();
 
-  const [mockText, setMockText] = useState<string | null>(null);
-  const [showCrisis, setShowCrisis] = useState(false);
+  const { startRecording, stopRecording, level } =
+    useAudioRecorder();
 
-  const crisis = useCrisisDetector(mockText);
+  const addIncident = useIncidentStore(
+    (s) => s.addIncident
+  );
 
-  useEffect(() => {
-    if (crisis) setShowCrisis(true);
-  }, [crisis]);
+  const [listenState, setListenState] =
+    useState<ListenState>("idle");
 
-  const resetCrisis = () => {
-    setShowCrisis(false);
-    setMockText(null);
+  const handleWavePress = async () => {
+    await Haptics.impactAsync(
+      Haptics.ImpactFeedbackStyle.Light
+    );
+
+    if (listenState === "idle") {
+      await startRecording();
+      setListenState("listening");
+      return;
+    }
+
+    if (listenState === "listening") {
+      await stopRecording();
+
+      const incident: IncidentRecord = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        createdAt: Date.now(),
+        narrative: "Voice note recorded",
+        extracted: {},
+        flags: {},
+      };
+
+      addIncident(incident);
+      setListenState("stopped");
+      return;
+    }
+
+    if (listenState === "stopped") {
+      await startRecording();
+      setListenState("listening");
+    }
   };
 
   if (micGranted === false) {
     return (
       <SafeScreen>
         <QuickExit />
-        <Text className="mt-24 text-center">
-          Microphone access is required.
+        <Text className="mt-24 text-center text-sm text-gray-500">
+          Microphone access is required
         </Text>
       </SafeScreen>
     );
@@ -42,7 +74,7 @@ export default function Listen() {
   if (micGranted === null) {
     return (
       <SafeScreen>
-        <Text className="mt-24 text-center">
+        <Text className="mt-24 text-center text-sm text-gray-500">
           Preparing microphone…
         </Text>
       </SafeScreen>
@@ -57,12 +89,16 @@ export default function Listen() {
         <CircleInherit size="lg">
           <VoiceWave
             size="lg"
-            onPress={() => setMockText("he's here help")}
+            state={listenState}
+            level={level}
+            onPress={handleWavePress}
           />
         </CircleInherit>
 
-        <Text className="text-gray-500 mt-6 mb-10">
-          Listening…
+        <Text className="mt-6 text-sm text-gray-500">
+          {listenState === "idle" && "Tap to start recording"}
+          {listenState === "listening" && "Listening… tap to stop"}
+          {listenState === "stopped" && "Saved"}
         </Text>
 
         <Pressable
@@ -72,18 +108,13 @@ export default function Listen() {
             );
             router.replace("/session/end");
           }}
-          className="bg-black px-6 py-3 rounded-xl w-[200px]"
+          className="bg-black px-6 py-3 rounded-xl w-[200px] mt-12"
         >
           <Text className="text-white text-center font-medium">
             End
           </Text>
         </Pressable>
       </View>
-
-      <CrisisOverlay
-        visible={showCrisis}
-        onContinue={resetCrisis}
-      />
     </SafeScreen>
   );
 }

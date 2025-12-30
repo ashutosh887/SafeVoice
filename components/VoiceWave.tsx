@@ -1,47 +1,71 @@
 import { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, View } from "react-native";
+import { Animated, Pressable, View } from "react-native";
 
 type WaveSize = "sm" | "lg";
+type WaveState = "idle" | "listening" | "stopped";
 
 export default function VoiceWave({
   size = "sm",
+  state = "idle",
+  level = 0,
   onPress,
 }: {
   size?: WaveSize;
+  state?: WaveState;
+  level?: number;
   onPress?: () => void;
 }) {
-  const BAR_COUNT = size === "lg" ? 11 : 7;
-  const BAR_HEIGHT = size === "lg" ? 56 : 36;
-  const BAR_WIDTH = size === "lg" ? 7 : 5;
-  const GAP = size === "lg" ? 6 : 4;
-  const MAX_SCALE = size === "lg" ? 1.25 : 1.1;
+  const BAR_COUNT = size === "lg" ? 21 : 11;
+  const BAR_HEIGHT = size === "lg" ? 96 : 48;
+  const BAR_WIDTH = size === "lg" ? 4 : 3;
+  const GAP = size === "lg" ? 4 : 3;
 
-  const animValues = Array.from({ length: BAR_COUNT }).map(
-    () => useRef(new Animated.Value(0.4)).current
-  );
+  const clock = useRef(new Animated.Value(0)).current;
+
+  const bars = useRef(
+    Array.from({ length: BAR_COUNT }).map((_, i) => ({
+      phase: i * 0.6 + Math.random() * 0.5,
+      scale: new Animated.Value(0.15),
+    }))
+  ).current;
 
   useEffect(() => {
-    const animations = animValues.map((value, index) =>
+    if (state === "listening") {
       Animated.loop(
-        Animated.sequence([
-          Animated.timing(value, {
-            toValue: MAX_SCALE,
-            duration: 280 + index * 50,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(value, {
-            toValue: 0.4,
-            duration: 280 + index * 40,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      )
-    );
+        Animated.timing(clock, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      clock.stopAnimation();
+      bars.forEach((b) =>
+        Animated.timing(b.scale, {
+          toValue: state === "stopped" ? 0.35 : 0.15,
+          duration: 200,
+          useNativeDriver: true,
+        }).start()
+      );
+    }
+  }, [state]);
 
-    Animated.stagger(70, animations).start();
-  }, []);
+  useEffect(() => {
+    if (state !== "listening") return;
+
+    bars.forEach((bar, i) => {
+      const intensity =
+        0.15 +
+        Math.min(level * 1.4, 1) *
+          (0.6 + Math.sin(bar.phase) * 0.4);
+
+      Animated.timing(bar.scale, {
+        toValue: intensity,
+        duration: 80,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [level, state]);
 
   return (
     <Pressable onPress={onPress}>
@@ -49,22 +73,30 @@ export default function VoiceWave({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          height: BAR_HEIGHT + 8,
+          justifyContent: "center",
+          height: BAR_HEIGHT + 20,
         }}
       >
-        {animValues.map((val, i) => (
-          <Animated.View
-            key={i}
-            style={{
-              width: BAR_WIDTH,
-              height: BAR_HEIGHT,
-              marginHorizontal: GAP / 2,
-              borderRadius: BAR_WIDTH / 2,
-              backgroundColor: "#52525b",
-              transform: [{ scaleY: val }],
-            }}
-          />
-        ))}
+        {bars.map((bar, i) => {
+          const shade =
+            state === "listening"
+              ? 30 + Math.abs(i - BAR_COUNT / 2) * 6
+              : 160;
+
+          return (
+            <Animated.View
+              key={i}
+              style={{
+                width: BAR_WIDTH,
+                height: BAR_HEIGHT,
+                marginHorizontal: GAP / 2,
+                borderRadius: BAR_WIDTH,
+                backgroundColor: `rgb(${shade},${shade},${shade})`,
+                transform: [{ scaleY: bar.scale }],
+              }}
+            />
+          );
+        })}
       </View>
     </Pressable>
   );
