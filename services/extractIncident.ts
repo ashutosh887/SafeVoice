@@ -5,10 +5,51 @@ type ExtractionResult = Pick<
   "summary" | "extracted" | "flags"
 >;
 
-const PROMPT = (text: string) => `
+const GEMINI_PROMPT = (text: string) => `
+You are a legal documentation assistant.
+
+You must ALWAYS return a valid JSON object.
+All keys MUST be present.
+If information is not explicitly stated, use null.
+
+Task:
+- Write a neutral factual summary of what was said.
+- Extract facts ONLY if explicitly stated.
+- If the content is benign or casual, clearly say so in the summary.
+
+Return EXACTLY this JSON shape:
+{
+  "summary": string,
+  "extracted": {
+    "time": string | null,
+    "location": string | null,
+    "actions": string[] | null,
+    "witnesses": string[] | null,
+    "childrenPresent": boolean | null,
+    "priorIncidents": boolean | null
+  },
+  "flags": {
+    "escalation": boolean | null,
+    "imminentRisk": boolean | null
+  }
+}
+
+Rules:
+- Do NOT infer
+- Do NOT invent
+- Do NOT omit keys
+- Use null if not mentioned
+
+Narration:
+"""${text}"""
+`;
+
+const OPENAI_PROMPT = (text: string) => `
 You are a trauma-informed legal documentation assistant.
 
-Extract only explicitly stated facts.
+ALWAYS produce a neutral summary.
+Extract facts ONLY if explicitly stated.
+If content is benign, clearly say so.
 
 Return STRICT JSON:
 {
@@ -30,28 +71,46 @@ Return STRICT JSON:
 Rules:
 - Do not infer
 - Do not invent
-- If unsure, return null
+- Use null when not mentioned
 
 Narration:
 """${text}"""
 `;
 
+function safeJsonParse(text: string): ExtractionResult | null {
+  try {
+    const cleaned = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return null;
+  }
+}
+
 async function extractWithGemini(
   transcript: string
 ): Promise<ExtractionResult | null> {
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.EXPO_PUBLIC_GEMINI_API_KEY}`,
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key":
+          process.env.EXPO_PUBLIC_GEMINI_API_KEY!,
+      },
       body: JSON.stringify({
         contents: [
           {
-            role: "user",
-            parts: [{ text: PROMPT(transcript) }],
+            parts: [{ text: GEMINI_PROMPT(transcript) }],
           },
         ],
-        generationConfig: { temperature: 0.2 },
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 512,
+        },
       }),
     }
   );
@@ -64,7 +123,7 @@ async function extractWithGemini(
 
   if (!text) return null;
 
-  return JSON.parse(text);
+  return safeJsonParse(text);
 }
 
 async function extractWithOpenAI(
@@ -80,16 +139,16 @@ async function extractWithOpenAI(
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        temperature: 0.2,
+        temperature: 0.1,
         messages: [
           {
             role: "system",
             content:
-              "You extract structured legal facts from trauma narratives. Output strict JSON only.",
+              "Extract explicit facts and return strict JSON only.",
           },
           {
             role: "user",
-            content: PROMPT(transcript),
+            content: OPENAI_PROMPT(transcript),
           },
         ],
       }),
@@ -102,17 +161,17 @@ async function extractWithOpenAI(
   const text = json.choices?.[0]?.message?.content;
   if (!text) return null;
 
-  return JSON.parse(text);
+  return safeJsonParse(text);
 }
 
 export async function extractIncidentFromTranscript(
   transcript: string
 ): Promise<ExtractionResult | null> {
   try {
-    return (
-      (await extractWithGemini(transcript)) ??
-      (await extractWithOpenAI(transcript))
-    );
+    const gemini = await extractWithGemini(transcript);
+    if (gemini) return gemini;
+
+    return await extractWithOpenAI(transcript);
   } catch {
     return null;
   }
