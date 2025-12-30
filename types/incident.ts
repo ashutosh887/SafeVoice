@@ -1,9 +1,13 @@
 export type IncidentRecord = {
   id: string;
   createdAt: number;
+
   narrative: string;
   audioUri: string;
+
   transcript?: string;
+  summary?: string;
+
   extracted: {
     time?: string;
     location?: string;
@@ -12,6 +16,7 @@ export type IncidentRecord = {
     childrenPresent?: boolean;
     priorIncidents?: boolean;
   };
+
   flags: {
     escalation?: boolean;
     imminentRisk?: boolean;
