@@ -1,3 +1,4 @@
+import HapticTabButton from "@/components/HapticTab";
 import { Tabs } from "expo-router";
 import { HelpCircle, Home, List, Shield } from "lucide-react-native";
 import { Platform } from "react-native";
@@ -12,23 +13,30 @@ export default function WitnessLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+
         tabBarActiveTintColor: "#010100",
         tabBarInactiveTintColor: "#6b7280",
+
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontSize: 9,
           fontWeight: "500",
           marginTop: 2,
         },
+
         tabBarIconStyle: {
           marginTop: 6,
         },
+
         tabBarStyle: {
           height: Platform.OS === "ios" ? 64 + insets.bottom : 64,
           backgroundColor: "#ffffff",
           borderTopWidth: 1,
           borderTopColor: "#e5e7eb",
         },
+
+        // ✅ THIS is the correct integration
+        tabBarButton: (props) => <HapticTabButton {...props} />,
       }}
     >
       <Tabs.Screen
@@ -36,7 +44,11 @@ export default function WitnessLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <Home size={ICON_SIZE} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <Home
+              size={ICON_SIZE}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -46,7 +58,11 @@ export default function WitnessLayout() {
         options={{
           title: "Timeline",
           tabBarIcon: ({ color, focused }) => (
-            <List size={ICON_SIZE} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <List
+              size={ICON_SIZE}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -56,7 +72,11 @@ export default function WitnessLayout() {
         options={{
           title: "Safety",
           tabBarIcon: ({ color, focused }) => (
-            <Shield size={ICON_SIZE} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <Shield
+              size={ICON_SIZE}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -66,7 +86,11 @@ export default function WitnessLayout() {
         options={{
           title: "Support",
           tabBarIcon: ({ color, focused }) => (
-            <HelpCircle size={ICON_SIZE} color={color} strokeWidth={focused ? 2.5 : 2} />
+            <HelpCircle
+              size={ICON_SIZE}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
