@@ -16,7 +16,9 @@ import {
 export default function Timeline() {
   const incidents = useIncidentStore((s) => s.incidents);
   const hydrate = useIncidentStore((s) => s.hydrate);
-  const removeIncident = useIncidentStore((s) => s.removeIncident);
+  const removeIncident = useIncidentStore(
+    (s) => s.removeIncident
+  );
 
   const [selected, setSelected] =
     useState<IncidentRecord | null>(null);
@@ -53,8 +55,22 @@ export default function Timeline() {
               </Text>
 
               <Text className="text-xs text-gray-500">
-                {new Date(item.createdAt).toLocaleString()}
+                {new Date(
+                  item.createdAt
+                ).toLocaleString()}
               </Text>
+
+              {item.summary && (
+                <Text className="text-sm text-gray-700 mt-2">
+                  {item.summary}
+                </Text>
+              )}
+
+              {item.flags.escalation && (
+                <Text className="text-xs text-red-600 mt-1">
+                  Possible escalation detected
+                </Text>
+              )}
 
               <Pressable
                 onPress={async () => {
