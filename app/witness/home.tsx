@@ -1,21 +1,25 @@
+import QuickExit from "@/components/QuickExit";
+import SafeScreen from "@/components/SafeScreen";
 import { useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text } from "react-native";
 
 export default function Home() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
-      <Text className="text-xl mb-10 text-center">
+    <SafeScreen>
+      <QuickExit />
+
+      <Text className="text-xl mt-20 mb-10 text-center">
         I’m here with you.
       </Text>
 
       <Pressable
         onPress={() => router.push("/session/start")}
-        className="bg-black px-8 py-4 rounded-xl"
+        className="bg-black px-8 py-4 rounded-xl self-center"
       >
         <Text className="text-white">🎤 Talk to Witness</Text>
       </Pressable>
-    </View>
+    </SafeScreen>
   );
 }

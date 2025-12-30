@@ -1,22 +1,33 @@
+import QuickExit from "@/components/QuickExit";
+import SafeScreen from "@/components/SafeScreen";
 import { FlatList, Text, View } from "react-native";
 
 const DATA = [
-  { id: "1", label: "Approx. May — High risk" },
-  { id: "2", label: "Approx. June — Medium risk" },
+  { id: "1", date: "Approx. May", risk: "High" },
+  { id: "2", date: "Approx. June", risk: "Medium" },
 ];
 
 export default function Timeline() {
   return (
-    <View className="flex-1 bg-white px-6 pt-16">
-      <Text className="text-xl mb-6">Your Record</Text>
+    <SafeScreen>
+      <QuickExit />
 
-      <FlatList
-        data={DATA}
-        keyExtractor={(i) => i.id}
-        renderItem={({ item }) => (
-          <Text className="py-4 border-b">{item.label}</Text>
-        )}
-      />
-    </View>
+      <View className="px-6 pt-10">
+        <Text className="text-xl mb-6">Your Record</Text>
+
+        <FlatList
+          data={DATA}
+          keyExtractor={(i) => i.id}
+          renderItem={({ item }) => (
+            <View className="py-4 border-b border-gray-200">
+              <Text className="text-base">{item.date}</Text>
+              <Text className="text-xs text-gray-500">
+                Risk level: {item.risk}
+              </Text>
+            </View>
+          )}
+        />
+      </View>
+    </SafeScreen>
   );
 }
