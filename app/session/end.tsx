@@ -6,7 +6,13 @@ import { transcribeAudio } from "@/services/transcribe";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import { useRouter } from "expo-router";
 import { Check } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
 export default function EndSession() {
   const router = useRouter();
@@ -14,6 +20,7 @@ export default function EndSession() {
   const updateIncident = useIncidentStore(
     (s) => s.updateIncident
   );
+  const [exiting, setExiting] = useState(false);
 
   const tryEnrichLatest = async () => {
     const latest = incidents[0];
@@ -46,12 +53,16 @@ export default function EndSession() {
   };
 
   const handleExit = async () => {
+    if (exiting) return;
+
+    setExiting(true);
+
     const enrichPromise = tryEnrichLatest();
 
     await Promise.race([
       enrichPromise,
       new Promise((res) =>
-        setTimeout(res, 1000)
+        setTimeout(res, 900)
       ),
     ]);
 
@@ -73,11 +84,18 @@ export default function EndSession() {
 
         <Pressable
           onPress={handleExit}
-          className="bg-black px-6 py-3 rounded-xl w-[200px]"
+          disabled={exiting}
+          className={`px-6 py-3 rounded-xl w-[200px] flex-row items-center justify-center ${
+            exiting ? "bg-gray-800" : "bg-black"
+          }`}
         >
-          <Text className="text-white text-center font-medium">
-            Exit safely
-          </Text>
+          {exiting ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text className="text-white text-center font-medium">
+              Exit safely
+            </Text>
+          )}
         </Pressable>
       </View>
     </SafeScreen>
