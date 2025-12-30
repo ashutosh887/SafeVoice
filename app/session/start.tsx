@@ -1,6 +1,6 @@
+import VoiceCircle from "@/components/CircleInherit";
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
-import VoiceCircle from "@/components/VoiceCircle";
 import { useRouter } from "expo-router";
 import { Mic } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";

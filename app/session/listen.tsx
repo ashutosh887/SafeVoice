@@ -1,15 +1,32 @@
+import CircleInherit from "@/components/CircleInherit";
+import CrisisOverlay from "@/components/CrisisOverlay";
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
-import VoiceCircle from "@/components/VoiceCircle";
 import VoiceWave from "@/components/VoiceWave";
+import { useCrisisDetector } from "@/hooks/useCrisisDetector";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 export default function Listen() {
   const router = useRouter();
   const micGranted = useMicrophone();
+
+  const [mockText, setMockText] = useState<string | null>(null);
+  const [showCrisis, setShowCrisis] = useState(false);
+
+  const crisis = useCrisisDetector(mockText);
+
+  useEffect(() => {
+    if (crisis) setShowCrisis(true);
+  }, [crisis]);
+
+  const resetCrisis = () => {
+    setShowCrisis(false);
+    setMockText(null);
+  };
 
   if (micGranted === false) {
     return (
@@ -37,9 +54,12 @@ export default function Listen() {
       <QuickExit />
 
       <View className="flex-1 items-center justify-center px-6">
-        <VoiceCircle>
-          <VoiceWave />
-        </VoiceCircle>
+        <CircleInherit size="lg">
+          <VoiceWave
+            size="lg"
+            onPress={() => setMockText("he's here help")}
+          />
+        </CircleInherit>
 
         <Text className="text-gray-500 mt-6 mb-10">
           Listening…
@@ -52,13 +72,18 @@ export default function Listen() {
             );
             router.replace("/session/end");
           }}
-          className="bg-black px-6 py-3 rounded-xl"
+          className="bg-black px-6 py-3 rounded-xl w-[200px]"
         >
-          <Text className="text-white">
+          <Text className="text-white text-center font-medium">
             End
           </Text>
         </Pressable>
       </View>
+
+      <CrisisOverlay
+        visible={showCrisis}
+        onContinue={resetCrisis}
+      />
     </SafeScreen>
   );
 }

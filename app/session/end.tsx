@@ -1,7 +1,9 @@
+import CircleInherit from "@/components/CircleInherit";
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
 import { useRouter } from "expo-router";
-import { Pressable, Text } from "react-native";
+import { Check } from "lucide-react-native";
+import { Pressable, Text, View } from "react-native";
 
 export default function EndSession() {
   const router = useRouter();
@@ -10,16 +12,24 @@ export default function EndSession() {
     <SafeScreen>
       <QuickExit />
 
-      <Text className="text-xl mt-24 mb-6 text-center">
-        You did the right thing.
-      </Text>
+      <View className="flex-1 items-center justify-center px-6">
+        <CircleInherit>
+          <Check size={28} color="#16a34a" />
+        </CircleInherit>
 
-      <Pressable
-        onPress={() => router.replace("/witness/home")}
-        className="bg-black px-6 py-3 rounded-xl self-center"
-      >
-        <Text className="text-white">Exit safely</Text>
-      </Pressable>
+        <Text className="text-xl mt-8 mb-6 text-center">
+          You did the right thing.
+        </Text>
+
+        <Pressable
+          onPress={() => router.replace("/witness/home")}
+          className="bg-black px-6 py-3 rounded-xl w-[200px]"
+        >
+          <Text className="text-white text-center font-medium">
+            Exit safely
+          </Text>
+        </Pressable>
+      </View>
     </SafeScreen>
   );
 }
