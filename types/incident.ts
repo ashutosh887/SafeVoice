@@ -22,3 +22,16 @@ export type IncidentRecord = {
     imminentRisk?: boolean;
   };
 };
+
+export type RiskLevel = "low" | "medium" | "high";
+
+export type IncidentPatterns = {
+  totalIncidents: number;
+  incidentsLast7Days: number;
+  incidentsLast30Days: number;
+  escalationCount: number;
+  imminentRiskCount: number;
+  childExposureCount: number;
+  frequencyIncreasing: boolean;
+  riskLevel: RiskLevel;
+};
