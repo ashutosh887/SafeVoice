@@ -21,7 +21,7 @@ const Index = () => {
 
       <Pressable
         className="bg-[#010100] px-8 py-4 rounded-xl shadow-lg shadow-black/15 elevation-8"
-        style={({ pressed }) => ({
+        style={({ pressed }: { pressed: boolean }) => ({
           opacity: pressed ? 0.8 : 1,
           transform: [{ scale: pressed ? 0.98 : 1 }],
         })}
