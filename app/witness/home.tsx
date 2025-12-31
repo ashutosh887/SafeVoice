@@ -5,66 +5,61 @@ import config from "@/config";
 import { useRouter } from "expo-router";
 import { FileText, Mic } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Home() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   return (
     <SafeScreen>
       <QuickExit />
 
       <View className="flex-1 px-6">
-        <View
-          style={{
-            marginTop: 12,
-            marginBottom: 28,
-          }}
-        >
+        <View className="mt-4 mb-8">
           <View className="flex-row items-center">
             <Logo size={28} />
-            <Text className="ml-3 text-lg font-medium">{config.appName}</Text>
+            <Text className="ml-3 text-lg font-medium">
+              {config.appName}
+            </Text>
           </View>
 
-          <Text className="text-sm text-gray-600 mt-2">
-            A private space to record events safely.{" "}
+          <Text className="text-sm text-gray-600 mt-3 max-w-[90%]">
+            A private space to record events safely.
           </Text>
         </View>
 
-        <View className="mb-6">
+        <View>
           <Pressable
             onPress={() => router.push("/session/start")}
-            className="rounded-2xl border border-gray-300 bg-white p-5"
+            className="rounded-t-2xl border border-gray-300 bg-white p-5"
           >
-            <View className="flex-row items-center mb-3">
-              <Mic size={18} color="#18181b" />
-              <Text className="ml-3 text-base font-medium">
+            <View className="flex-row items-center mb-2">
+              <Mic size={17} color="#18181b" />
+              <Text className="ml-3 text-[15px] font-medium text-gray-900">
                 Talk to {config.appName}
               </Text>
             </View>
 
-            <Text className="text-sm text-gray-600">
+            <Text className="text-sm text-gray-600 leading-5 max-w-[95%]">
               Speak freely. Your voice will be recorded and organized privately.
             </Text>
           </Pressable>
-        </View>
 
-        <Pressable
-          onPress={() => router.push("/witness/prepare")}
-          className="rounded-2xl border border-gray-200 bg-gray-50 p-5"
-        >
-          <View className="flex-row items-center mb-3">
-            <FileText size={16} color="#52525b" />
-            <Text className="ml-3 text-sm font-medium">
-              Prepare documentation
+          <Pressable
+            onPress={() => router.push("/witness/prepare")}
+            className="rounded-b-2xl border border-t-0 border-gray-300 bg-gray-50 p-5"
+          >
+            <View className="flex-row items-center mb-2">
+              <FileText size={17} color="#52525b" />
+              <Text className="ml-3 text-[15px] font-medium text-gray-800">
+                Prepare documentation
+              </Text>
+            </View>
+
+            <Text className="text-sm text-gray-600 leading-5 max-w-[95%]">
+              Review and export your recordings if you decide to share them.
             </Text>
-          </View>
-
-          <Text className="text-xs text-gray-600">
-            Review and export your recordings if you decide to share them.
-          </Text>
-        </Pressable>
+          </Pressable>
+        </View>
       </View>
     </SafeScreen>
   );
