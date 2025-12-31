@@ -27,16 +27,14 @@ export default function EndSession() {
 
     const latest = incidents[0];
 
-    if (latest && !latest.transcript) {
+    if (latest) {
       updateIncident(latest.id, {
-        flags: {
-          ...latest.flags,
-        },
+        needsReprocessing: false,
       });
     }
 
     await new Promise((res) =>
-      setTimeout(res, 400)
+      setTimeout(res, 300)
     );
 
     router.replace("/witness/home");
