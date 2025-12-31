@@ -2,9 +2,14 @@ import { IncidentModal } from "@/components/incident/IncidentModal";
 import IncidentPatternInsight from "@/components/incident/IncidentPatternInsight";
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
+import { exportIncidentReport } from "@/lib/exportIncidentReport";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import { IncidentRecord } from "@/types/incident";
+
+import { File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
+import * as Sharing from "expo-sharing";
+
 import {
   AlertTriangle,
   ShieldAlert,
@@ -23,7 +28,9 @@ export default function Timeline() {
   const incidents = useIncidentStore((s) => s.incidents);
   const patterns = useIncidentStore((s) => s.patterns);
   const hydrate = useIncidentStore((s) => s.hydrate);
-  const removeIncident = useIncidentStore((s) => s.removeIncident);
+  const removeIncident = useIncidentStore(
+    (s) => s.removeIncident
+  );
 
   const [selected, setSelected] =
     useState<IncidentRecord | null>(null);
@@ -31,6 +38,27 @@ export default function Timeline() {
   useEffect(() => {
     hydrate();
   }, []);
+
+  /* ---------------- EXPORT ---------------- */
+
+  const exportReport = async () => {
+    if (!incidents.length) return;
+
+    const report = exportIncidentReport(
+      incidents,
+      patterns
+    );
+
+    const file = new File(
+      Paths.cache,
+      `incident-report-${Date.now()}.txt`
+    );
+
+    await file.write(report);
+    await Sharing.shareAsync(file.uri);
+  };
+
+  /* ---------------- DELETE ---------------- */
 
   const confirmDelete = (id: string) => {
     Alert.alert(
@@ -51,6 +79,8 @@ export default function Timeline() {
       ]
     );
   };
+
+  /* ---------------- HEADER ---------------- */
 
   const riskColor =
     patterns.riskLevel === "high"
@@ -74,6 +104,8 @@ export default function Timeline() {
     </View>
   );
 
+  /* ---------------- RENDER ---------------- */
+
   return (
     <SafeScreen>
       <QuickExit />
@@ -84,7 +116,7 @@ export default function Timeline() {
         contentContainerStyle={{
           padding: 16,
           gap: 12,
-          paddingBottom: 32,
+          paddingBottom: 96, // space for export button
         }}
         ListHeaderComponent={Header}
         ListEmptyComponent={
@@ -103,7 +135,10 @@ export default function Timeline() {
               </Text>
 
               {item.flags?.imminentRisk && (
-                <ShieldAlert size={16} color="#dc2626" />
+                <ShieldAlert
+                  size={16}
+                  color="#dc2626"
+                />
               )}
 
               {!item.flags?.imminentRisk &&
@@ -116,7 +151,9 @@ export default function Timeline() {
             </View>
 
             <Text className="text-xs text-gray-500">
-              {new Date(item.createdAt).toLocaleString()}
+              {new Date(
+                item.createdAt
+              ).toLocaleString()}
             </Text>
 
             {item.summary && (
@@ -130,15 +167,31 @@ export default function Timeline() {
             />
 
             <Pressable
-              onPress={() => confirmDelete(item.id)}
+              onPress={() =>
+                confirmDelete(item.id)
+              }
               hitSlop={12}
               className="absolute right-4 top-4"
             >
-              <Trash2 size={18} color="#6b7280" />
+              <Trash2
+                size={18}
+                color="#6b7280"
+              />
             </Pressable>
           </Pressable>
         )}
       />
+
+      {incidents.length > 0 && (
+        <Pressable
+          onPress={exportReport}
+          className="absolute bottom-6 left-4 right-4 rounded-xl bg-black py-3"
+        >
+          <Text className="text-center text-white font-medium">
+            Export incident record
+          </Text>
+        </Pressable>
+      )}
 
       <IncidentModal
         incident={selected}
