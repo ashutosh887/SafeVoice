@@ -1,50 +1,47 @@
-# Welcome to your Expo app 👋
+# SafeVoice
+AI-Powered Legal Evidence Documentation for Victims of Abuse
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+SafeVoice is a voice-first AI companion that helps victims of domestic violence and abuse safely document incidents, preserve evidence, and prepare for legal action - without typing, legal knowledge, or exposing themselves to danger.
 
-## Get started
+## 🚨 The Problem
+Most abuse victims never report incidents.
+Evidence is often lost due to fear, trauma, unsafe environments, and lack of legal guidance.
+Written documentation can be discovered and used against them.
 
-1. Install dependencies
+## 💡 The Solution
+SafeVoice provides a private, secure space where victims can simply speak - and the system handles the rest.
 
-   ```bash
-   npm install
-   ```
+### 🕵️ Safety by Design
+- App appears as a harmless meditation/wellness app
+- Real app unlocks only via long-press + PIN
+- One-tap quick exit instantly returns to decoy screen
+- No visible recordings or suspicious UI
 
-2. Start the app
+### 🎙️ Voice-First Documentation
+- Victims record incidents using voice
+- Trauma-informed, supportive flow
+- No writing required
 
-   ```bash
-   npx expo start
-   ```
+### 🧠 AI-Powered Understanding
+- Automatic transcription and reasoning
+- Intelligent follow-up questions
+- Pattern and escalation detection
+- Risk and crisis awareness
 
-In the output, you'll find options to open the app in a
+### 📁 Evidence Timeline
+- Secure, private chronological record
+- Exportable only when the user is ready
+- Designed for legal and support contexts
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🛠️ Powered By
+- **ElevenLabs** - empathetic AI voice interface
+- **Google Gemini** - reasoning, pattern detection, evidence structuring
+- **Google Cloud** - secure, encrypted infrastructure
+- **Confluent** - real-time data streaming for risk monitoring
+- **Datadog** - observability, reliability, and risk monitoring
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🎯 Impact
+SafeVoice lowers the barrier to justice by prioritizing safety, preserving memory under trauma, and helping victims prepare for legal support - without replacing lawyers or shelters.
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📽️ Demo
+See attached screen recording for a full walkthrough.
