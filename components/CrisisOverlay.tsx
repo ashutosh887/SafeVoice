@@ -1,134 +1,64 @@
-import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
-import { AlertTriangle } from "lucide-react-native";
-import { Modal, Pressable, Text, View } from "react-native";
+import { useIncidentStore } from "@/store/useIncidentStore";
+import { IncidentRecord } from "@/types/incident";
+import * as Linking from "expo-linking";
+import { Pressable, Text, View } from "react-native";
 
-export default function CrisisOverlay({
-  visible,
-  onContinue,
+export function CrisisOverlay({
+  incident,
 }: {
-  visible: boolean;
-  onContinue: () => void;
+  incident: IncidentRecord;
 }) {
-  const router = useRouter();
+  const updateIncident = useIncidentStore(
+    (s) => s.updateIncident
+  );
+
+  const callEmergency = () => {
+    Linking.openURL("tel:112");
+  };
+
+  const markSafe = () => {
+    updateIncident(incident.id, {
+      crisis: {
+        ...incident.crisis,
+        detected: false,
+        resolvedAt: Date.now(),
+      },
+    });
+  };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.45)",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 24,
-        }}
+    <View className="border border-red-300 bg-red-50 rounded-xl p-4 gap-3">
+      <Text className="text-sm font-semibold text-red-800">
+        Immediate danger detected
+      </Text>
+
+      <Text className="text-xs text-red-700">
+        It sounds like you may be in danger right now.
+        Your safety comes first.
+      </Text>
+
+      <Pressable
+        onPress={callEmergency}
+        className="bg-red-600 rounded-lg py-3"
       >
-        <View
-          style={{
-            width: "100%",
-            maxWidth: 360,
-            backgroundColor: "#ffffff",
-            borderRadius: 20,
-            padding: 24,
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: "#fee2e2",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-            }}
-          >
-            <AlertTriangle size={22} color="#dc2626" />
-          </View>
+        <Text className="text-white text-center text-sm font-medium">
+          Call emergency services
+        </Text>
+      </Pressable>
 
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "600",
-              textAlign: "center",
-              marginBottom: 8,
-            }}
-          >
-            I might be mistaken
-          </Text>
+      <Pressable
+        onPress={markSafe}
+        className="border border-red-400 rounded-lg py-3"
+      >
+        <Text className="text-red-700 text-center text-sm font-medium">
+          I’m safe right now
+        </Text>
+      </Pressable>
 
-          <Text
-            style={{
-              textAlign: "center",
-              color: "#52525b",
-              marginBottom: 24,
-            }}
-          >
-            Something you said sounded urgent.  
-            Are you in immediate danger right now?
-          </Text>
-
-          <Pressable
-            onPress={async () => {
-              await Haptics.notificationAsync(
-                Haptics.NotificationFeedbackType.Warning
-              );
-            }}
-            style={{
-              width: "100%",
-              backgroundColor: "#dc2626",
-              paddingVertical: 14,
-              borderRadius: 12,
-              marginBottom: 12,
-            }}
-          >
-            <Text
-              style={{
-                color: "#ffffff",
-                textAlign: "center",
-                fontWeight: "600",
-              }}
-            >
-              Call emergency services
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={onContinue}
-            style={{
-              width: "100%",
-              backgroundColor: "#e5e7eb",
-              paddingVertical: 14,
-              borderRadius: 12,
-              marginBottom: 12,
-            }}
-          >
-            <Text style={{ textAlign: "center" }}>
-              Continue listening
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.replace("/meditation")}
-            style={{
-              width: "100%",
-              backgroundColor: "#f4f4f5",
-              paddingVertical: 14,
-              borderRadius: 12,
-            }}
-          >
-            <Text style={{ textAlign: "center" }}>
-              Exit safely
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
+      <Text className="text-xs text-red-600">
+        If you cannot call, try to move to a safer place
+        or reach out to someone you trust.
+      </Text>
+    </View>
   );
 }

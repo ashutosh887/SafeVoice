@@ -1,3 +1,19 @@
+export type RiskLevel = "low" | "medium" | "high";
+
+export type CrisisState = {
+  detected: boolean;
+  keywords?: string[];
+  detectedAt?: number;
+  resolvedAt?: number;
+  resolutionNote?: string;
+};
+
+export type FollowUp = {
+  question: string;
+  answer: string;
+  askedAt: number;
+};
+
 export type IncidentRecord = {
   id: string;
   createdAt: number;
@@ -21,17 +37,22 @@ export type IncidentRecord = {
     escalation?: boolean;
     imminentRisk?: boolean;
   };
-};
 
-export type RiskLevel = "low" | "medium" | "high";
+  followUps?: FollowUp[];
+  crisis?: CrisisState;
 
-export type IncidentPatterns = {
-  totalIncidents: number;
-  incidentsLast7Days: number;
-  incidentsLast30Days: number;
-  escalationCount: number;
-  imminentRiskCount: number;
-  childExposureCount: number;
-  frequencyIncreasing: boolean;
-  riskLevel: RiskLevel;
+  intervention?: {
+    started: boolean;
+  };
+
+  legal?: {
+    completenessScore: number;
+    missingCriticalInfo: string[];
+  };
+
+  patterns?: {
+    frequencyIncreasing: boolean;
+    riskLevel: RiskLevel;
+    reasons: string[];
+  };
 };

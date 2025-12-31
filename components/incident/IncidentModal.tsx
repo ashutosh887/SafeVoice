@@ -1,19 +1,21 @@
-import { IncidentRecord } from "@/types/incident";
+import { useIncidentStore } from "@/store/useIncidentStore";
 import { X } from "lucide-react-native";
 import { Modal, Pressable, Text, View } from "react-native";
 import { IncidentAudioPlayer } from "./IncidentAudioPlayer";
-import { IncidentContextBanner } from "./IncidentContextBanner";
 import { IncidentDetails } from "./IncidentDetails";
-import IncidentPatternInsight from "./IncidentPatternInsight";
 import { IncidentProcessingGate } from "./IncidentProcessingGate";
 
 export function IncidentModal({
-  incident,
+  incidentId,
   onClose,
 }: {
-  incident: IncidentRecord | null;
+  incidentId: string | null;
   onClose: () => void;
 }) {
+  const incident = useIncidentStore((s) =>
+    s.incidents.find((i) => i.id === incidentId)
+  );
+
   if (!incident) return null;
 
   return (
@@ -38,10 +40,6 @@ export function IncidentModal({
           <IncidentAudioPlayer audioUri={incident.audioUri} />
 
           <IncidentProcessingGate incident={incident}>
-            <IncidentPatternInsight
-              incidentId={incident.id}
-            />
-            <IncidentContextBanner />
             <IncidentDetails incident={incident} />
           </IncidentProcessingGate>
         </Pressable>

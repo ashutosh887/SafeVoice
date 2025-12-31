@@ -2,12 +2,12 @@ import { extractIncidentFromTranscript } from "@/services/extractIncident";
 import { transcribeAudio } from "@/services/transcribe";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import { IncidentRecord } from "@/types/incident";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    Text,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
 
 export function IncidentProcessingGate({
@@ -17,56 +17,67 @@ export function IncidentProcessingGate({
   incident: IncidentRecord;
   children: React.ReactNode;
 }) {
-  const updateIncident = useIncidentStore((s) => s.updateIncident);
-  const [processing, setProcessing] = useState(false);
+  const updateIncident = useIncidentStore(
+    (s) => s.updateIncident
+  );
+
+  const ranRef = useRef(false);
+  const [processing, setProcessing] =
+    useState(false);
 
   useEffect(() => {
-    if (incident.transcript || processing) return;
+    if (ranRef.current) return;
+    ranRef.current = true;
 
     const run = async () => {
-      try {
-        setProcessing(true);
+      const latest =
+        useIncidentStore
+          .getState()
+          .incidents.find(
+            (i) => i.id === incident.id
+          ) ?? incident;
 
-        const transcript = await transcribeAudio(
-          incident.audioUri
+      let transcript = latest.transcript;
+
+      if (!transcript) {
+        setProcessing(true);
+        transcript = await transcribeAudio(
+          latest.audioUri
         );
 
-        const base: IncidentRecord = {
-          ...incident,
+        updateIncident(latest.id, {
           transcript,
-        };
+        });
+      }
 
-        updateIncident(base);
-
+      if (!latest.summary && transcript) {
         const enrichment =
-          await extractIncidentFromTranscript(transcript);
+          await extractIncidentFromTranscript(
+            transcript
+          );
 
         if (enrichment) {
-          updateIncident({ ...base, ...enrichment });
+          updateIncident(latest.id, enrichment);
         }
-      } finally {
-        setProcessing(false);
       }
+
+      setProcessing(false);
     };
 
     run();
-  }, [incident.id]);
+  }, []);
 
   return (
-    <ScrollView
-      className="border border-gray-200 rounded-xl p-4"
-      contentContainerStyle={{ gap: 14 }}
-    >
-      {processing ? (
-        <View className="items-center py-8">
+    <ScrollView contentContainerStyle={{ gap: 14 }}>
+      {processing && (
+        <View className="items-center py-6">
           <ActivityIndicator />
           <Text className="text-xs text-gray-500 mt-2">
             Processing recording…
           </Text>
         </View>
-      ) : (
-        children
       )}
+      {children}
     </ScrollView>
   );
 }

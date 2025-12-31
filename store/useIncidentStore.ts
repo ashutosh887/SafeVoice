@@ -1,75 +1,25 @@
-import {
-  deriveIncidentInsights,
-  IncidentInsights,
-} from "@/lib/incidentInsights";
 import { IncidentRecord } from "@/types/incident";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 
 const STORAGE_KEY = "SAFEVOICE_INCIDENTS";
 
-type Patterns = {
-  totalIncidents: number;
-  frequencyIncreasing: boolean;
-  riskLevel: "low" | "medium" | "high";
-};
-
 type IncidentState = {
   incidents: IncidentRecord[];
-  patterns: Patterns;
   hydrated: boolean;
 
   hydrate: () => Promise<void>;
-  addIncident: (i: IncidentRecord) => void;
+  createIncident: (incident: IncidentRecord) => void;
+  updateIncident: (
+    id: string,
+    patch: Partial<IncidentRecord>
+  ) => void;
   removeIncident: (id: string) => void;
-  updateIncident: (i: IncidentRecord) => void;
-
-  getIncidentInsights: (
-    id: string
-  ) => IncidentInsights | null;
 };
-
-function computePatterns(
-  incidents: IncidentRecord[]
-): Patterns {
-  const totalIncidents = incidents.length;
-
-  const escalationCount = incidents.filter(
-    (i) => i.flags?.escalation
-  ).length;
-
-  const imminentCount = incidents.filter(
-    (i) => i.flags?.imminentRisk
-  ).length;
-
-  const riskLevel =
-    imminentCount > 0
-      ? "high"
-      : escalationCount > 0
-      ? "medium"
-      : "low";
-
-  const frequencyIncreasing =
-    totalIncidents >= 3 &&
-    incidents[0].createdAt -
-      incidents[2].createdAt <
-      1000 * 60 * 60 * 24;
-
-  return {
-    totalIncidents,
-    frequencyIncreasing,
-    riskLevel,
-  };
-}
 
 export const useIncidentStore = create<IncidentState>(
   (set, get) => ({
     incidents: [],
-    patterns: {
-      totalIncidents: 0,
-      frequencyIncreasing: false,
-      riskLevel: "low",
-    },
     hydrated: false,
 
     hydrate: async () => {
@@ -79,24 +29,34 @@ export const useIncidentStore = create<IncidentState>(
       const incidents: IncidentRecord[] =
         raw ? JSON.parse(raw) : [];
 
-      set({
-        incidents,
-        patterns: computePatterns(incidents),
-        hydrated: true,
-      });
+      set({ incidents, hydrated: true });
     },
 
-    addIncident: (incident) => {
+    createIncident: (incident) => {
       const incidents = [
         incident,
         ...get().incidents,
       ];
 
-      set({
-        incidents,
-        patterns: computePatterns(incidents),
-      });
+      set({ incidents });
+      AsyncStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(incidents)
+      );
+    },
 
+    updateIncident: (id, patch) => {
+      const incidents = get().incidents.map(
+        (i) =>
+          i.id === id
+            ? {
+                ...i,
+                ...patch,
+              }
+            : i
+      );
+
+      set({ incidents });
       AsyncStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(incidents)
@@ -108,45 +68,10 @@ export const useIncidentStore = create<IncidentState>(
         (i) => i.id !== id
       );
 
-      set({
-        incidents,
-        patterns: computePatterns(incidents),
-      });
-
+      set({ incidents });
       AsyncStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(incidents)
-      );
-    },
-
-    updateIncident: (incident) => {
-      const incidents = get().incidents.map(
-        (i) =>
-          i.id === incident.id ? incident : i
-      );
-
-      set({
-        incidents,
-        patterns: computePatterns(incidents),
-      });
-
-      AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(incidents)
-      );
-    },
-
-    getIncidentInsights: (id) => {
-      const incidents = get().incidents;
-      const incident = incidents.find(
-        (i) => i.id === id
-      );
-
-      if (!incident) return null;
-
-      return deriveIncidentInsights(
-        incident,
-        incidents
       );
     },
   })

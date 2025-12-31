@@ -4,62 +4,126 @@ import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
 import { exportIncidentReport } from "@/lib/exportIncidentReport";
 import { useIncidentStore } from "@/store/useIncidentStore";
-import { IncidentRecord } from "@/types/incident";
+import { RiskLevel } from "@/types/incident";
 import { File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import * as Sharing from "expo-sharing";
-import { AlertTriangle, ShieldAlert, Trash2 } from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { Alert, FlatList, Pressable, Text, View } from "react-native";
+import {
+  AlertTriangle,
+  ShieldAlert,
+  Trash2,
+} from "lucide-react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
 export default function Timeline() {
   const incidents = useIncidentStore((s) => s.incidents);
-  const patterns = useIncidentStore((s) => s.patterns);
   const hydrate = useIncidentStore((s) => s.hydrate);
-  const removeIncident = useIncidentStore((s) => s.removeIncident);
-  const [selected, setSelected] = useState<IncidentRecord | null>(null);
+  const removeIncident = useIncidentStore(
+    (s) => s.removeIncident
+  );
+
+  const [selectedId, setSelectedId] =
+    useState<string | null>(null);
 
   useEffect(() => {
     hydrate();
   }, []);
 
+  const overallRisk: RiskLevel = useMemo(() => {
+    if (
+      incidents.some(
+        (i) =>
+          i.crisis?.detected ||
+          i.flags?.imminentRisk
+      )
+    )
+      return "high";
+
+    if (
+      incidents.some(
+        (i) =>
+          i.flags?.escalation ||
+          i.patterns?.riskLevel === "medium"
+      )
+    )
+      return "medium";
+
+    return "low";
+  }, [incidents]);
+
+  const frequencyIncreasing = useMemo(() => {
+    if (incidents.length < 3) return false;
+
+    const sorted = [...incidents].sort(
+      (a, b) => b.createdAt - a.createdAt
+    );
+
+    return (
+      sorted[0].createdAt -
+        sorted[2].createdAt <
+      1000 * 60 * 60 * 24
+    );
+  }, [incidents]);
+
   const exportReport = async () => {
     if (!incidents.length) return;
-    const report = exportIncidentReport(incidents, patterns);
-    const file = new File(Paths.cache, `incident-report-${Date.now()}.txt`);
+
+    const report = exportIncidentReport(incidents);
+
+    const file = new File(
+      Paths.cache,
+      `incident-report-${Date.now()}.txt`
+    );
+
     await file.write(report);
     await Sharing.shareAsync(file.uri);
   };
 
   const confirmDelete = (id: string) => {
-    Alert.alert("Delete recording?", "This action cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          removeIncident(id);
+    Alert.alert(
+      "Delete recording?",
+      "This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await Haptics.impactAsync(
+              Haptics.ImpactFeedbackStyle.Light
+            );
+            removeIncident(id);
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const riskColor =
-    patterns.riskLevel === "high"
+    overallRisk === "high"
       ? "text-red-600"
-      : patterns.riskLevel === "medium"
+      : overallRisk === "medium"
       ? "text-yellow-600"
       : "text-green-600";
 
   const Header = (
     <View className="px-6 pt-4 pb-4">
-      <Text className="text-lg font-medium mb-1">Timeline</Text>
-      <Text className={`text-sm ${riskColor}`}>
-        Overall risk level: {patterns.riskLevel.toUpperCase()}
+      <Text className="text-lg font-medium mb-1">
+        Timeline
       </Text>
 
-      {patterns.frequencyIncreasing && (
+      <Text className={`text-sm ${riskColor}`}>
+        Overall risk level: {overallRisk.toUpperCase()}
+      </Text>
+
+      {frequencyIncreasing && (
         <Text className="text-xs text-red-600 mt-1">
           Incidents are increasing in frequency
         </Text>
@@ -84,7 +148,9 @@ export default function Timeline() {
         renderItem={({ item }) => (
           <View className="px-6 mb-3">
             <Pressable
-              onPress={() => setSelected(item)}
+              onPress={() =>
+                setSelectedId(item.id)
+              }
               className="rounded-xl border border-gray-300 bg-white p-4"
             >
               <View className="flex-row items-center justify-between mb-1">
@@ -93,16 +159,25 @@ export default function Timeline() {
                 </Text>
 
                 {item.flags?.imminentRisk && (
-                  <ShieldAlert size={15} color="#dc2626" />
+                  <ShieldAlert
+                    size={15}
+                    color="#dc2626"
+                  />
                 )}
 
-                {!item.flags?.imminentRisk && item.flags?.escalation && (
-                  <AlertTriangle size={15} color="#f59e0b" />
-                )}
+                {!item.flags?.imminentRisk &&
+                  item.flags?.escalation && (
+                    <AlertTriangle
+                      size={15}
+                      color="#f59e0b"
+                    />
+                  )}
               </View>
 
               <Text className="text-xs text-gray-500">
-                {new Date(item.createdAt).toLocaleString()}
+                {new Date(
+                  item.createdAt
+                ).toLocaleString()}
               </Text>
 
               {item.summary && (
@@ -112,15 +187,22 @@ export default function Timeline() {
               )}
 
               <View className="mt-2">
-                <IncidentPatternInsight incidentId={item.id} />
+                <IncidentPatternInsight
+                  incidentId={item.id}
+                />
               </View>
 
               <Pressable
-                onPress={() => confirmDelete(item.id)}
+                onPress={() =>
+                  confirmDelete(item.id)
+                }
                 hitSlop={10}
                 className="absolute right-3 top-3"
               >
-                <Trash2 size={15} color="#6b7280" />
+                <Trash2
+                  size={15}
+                  color="#6b7280"
+                />
               </Pressable>
             </Pressable>
           </View>
@@ -139,8 +221,8 @@ export default function Timeline() {
       )}
 
       <IncidentModal
-        incident={selected}
-        onClose={() => setSelected(null)}
+        incidentId={selectedId}
+        onClose={() => setSelectedId(null)}
       />
     </SafeScreen>
   );
