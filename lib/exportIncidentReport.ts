@@ -134,10 +134,10 @@ export function exportIncidentReport(
         );
       }
 
-      if (incident.transcript) {
+      if (incident.combinedNarrative) {
         lines.push("");
-        lines.push("Transcript:");
-        lines.push(incident.transcript);
+        lines.push("Narrative:");
+        lines.push(incident.combinedNarrative);
       }
     });
 

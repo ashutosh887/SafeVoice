@@ -1,9 +1,13 @@
+import { logEvent } from "@/lib/observability";
 import { IncidentRecord } from "@/types/incident";
 
 type ExtractionResult = Pick<
   IncidentRecord,
   "summary" | "extracted" | "flags"
 >;
+
+const GEMINI_MODEL = "gemini-2.5-flash";
+const OPENAI_MODEL = "gpt-4o-mini";
 
 const GEMINI_PROMPT = (text: string) => `
 You are a legal documentation assistant.
@@ -90,88 +94,202 @@ function safeJsonParse(text: string): ExtractionResult | null {
 }
 
 async function extractWithGemini(
-  transcript: string
+  transcript: string,
+  incidentId?: string
 ): Promise<ExtractionResult | null> {
-  const res = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key":
-          process.env.EXPO_PUBLIC_GEMINI_API_KEY!,
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: GEMINI_PROMPT(transcript) }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 512,
+  const startedAt = Date.now();
+
+  logEvent({
+    event: "extraction.gemini.start",
+    incidentId,
+    payload: { model: GEMINI_MODEL },
+  });
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key":
+            process.env.EXPO_PUBLIC_GEMINI_API_KEY!,
         },
-      }),
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: GEMINI_PROMPT(transcript) }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 512,
+          },
+        }),
+      }
+    );
+
+    const latencyMs = Date.now() - startedAt;
+
+    if (!res.ok) {
+      logEvent({
+        event: "extraction.gemini.error",
+        incidentId,
+        payload: {
+          status: res.status,
+          latencyMs,
+        },
+      });
+      return null;
     }
-  );
 
-  if (!res.ok) return null;
+    const json = await res.json();
+    const text =
+      json.candidates?.[0]?.content?.parts?.[0]?.text;
 
-  const json = await res.json();
-  const text =
-    json.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      logEvent({
+        event: "extraction.gemini.empty",
+        incidentId,
+        payload: { latencyMs },
+      });
+      return null;
+    }
 
-  if (!text) return null;
+    const parsed = safeJsonParse(text);
+    if (!parsed) {
+      logEvent({
+        event: "extraction.gemini.parse_failed",
+        incidentId,
+        payload: { latencyMs },
+      });
+      return null;
+    }
 
-  return safeJsonParse(text);
+    logEvent({
+      event: "extraction.gemini.success",
+      incidentId,
+      payload: { latencyMs },
+    });
+
+    return parsed;
+  } catch (e: any) {
+    logEvent({
+      event: "extraction.gemini.exception",
+      incidentId,
+      payload: { message: e?.message },
+    });
+    return null;
+  }
 }
 
 async function extractWithOpenAI(
-  transcript: string
+  transcript: string,
+  incidentId?: string
 ): Promise<ExtractionResult | null> {
-  const res = await fetch(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.1,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Extract explicit facts and return strict JSON only.",
-          },
-          {
-            role: "user",
-            content: OPENAI_PROMPT(transcript),
-          },
-        ],
-      }),
+  const startedAt = Date.now();
+
+  logEvent({
+    event: "extraction.openai.start",
+    incidentId,
+    payload: { model: OPENAI_MODEL },
+  });
+
+  try {
+    const res = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: OPENAI_MODEL,
+          temperature: 0.1,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Extract explicit facts and return strict JSON only.",
+            },
+            {
+              role: "user",
+              content: OPENAI_PROMPT(transcript),
+            },
+          ],
+        }),
+      }
+    );
+
+    const latencyMs = Date.now() - startedAt;
+
+    if (!res.ok) {
+      logEvent({
+        event: "extraction.openai.error",
+        incidentId,
+        payload: {
+          status: res.status,
+          latencyMs,
+        },
+      });
+      return null;
     }
-  );
 
-  if (!res.ok) return null;
+    const json = await res.json();
+    const text = json.choices?.[0]?.message?.content;
 
-  const json = await res.json();
-  const text = json.choices?.[0]?.message?.content;
-  if (!text) return null;
+    if (!text) {
+      logEvent({
+        event: "extraction.openai.empty",
+        incidentId,
+        payload: { latencyMs },
+      });
+      return null;
+    }
 
-  return safeJsonParse(text);
+    const parsed = safeJsonParse(text);
+    if (!parsed) {
+      logEvent({
+        event: "extraction.openai.parse_failed",
+        incidentId,
+        payload: { latencyMs },
+      });
+      return null;
+    }
+
+    logEvent({
+      event: "extraction.openai.success",
+      incidentId,
+      payload: { latencyMs },
+    });
+
+    return parsed;
+  } catch (e: any) {
+    logEvent({
+      event: "extraction.openai.exception",
+      incidentId,
+      payload: { message: e?.message },
+    });
+    return null;
+  }
 }
 
 export async function extractIncidentFromTranscript(
-  transcript: string
+  transcript: string,
+  incidentId?: string
 ): Promise<ExtractionResult | null> {
   try {
-    const gemini = await extractWithGemini(transcript);
+    const gemini = await extractWithGemini(
+      transcript,
+      incidentId
+    );
     if (gemini) return gemini;
 
-    return await extractWithOpenAI(transcript);
+    return await extractWithOpenAI(
+      transcript,
+      incidentId
+    );
   } catch {
     return null;
   }

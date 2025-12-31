@@ -73,8 +73,11 @@ export function IncidentDetails({
           : "No immediate risk detected"
       )}
 
-      {incident.transcript &&
-        row("Full Transcript", incident.transcript)}
+      {incident.combinedNarrative &&
+        row(
+          "Full Narrative",
+          incident.combinedNarrative
+        )}
     </>
   );
 }
