@@ -61,21 +61,21 @@ export default function Unlock() {
       <QuickExit to="/" />
 
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-3xl font-semibold mb-4 text-center">
+        <Text className="text-3xl font-semibold mb-2 text-center">
           {storedPin ? "Enter PIN" : "Set a PIN"}
         </Text>
 
-        <Text className="text-base text-gray-600 text-center mb-12 max-w-[320px] leading-[22px]">
+        <Text className="text-base text-gray-600 text-center mb-10 max-w-[320px]">
           {storedPin
-            ? "Enter your PIN to continue."
-            : "Create a 4-digit PIN to protect your private space."}
+            ? "This keeps your recordings private."
+            : "Choose a 4-digit PIN to protect your private space."}
         </Text>
 
-        <View className="flex-row mb-10">
+        <View className="flex-row mb-8">
           {[0,1,2,3].map((i) => (
             <View
               key={i}
-              className={`mx-3 h-4 w-4 rounded-full ${
+              className={`mx-2 h-4 w-4 rounded-full ${
                 pin.length > i ? "bg-black" : "bg-gray-300"
               }`}
             />
@@ -88,8 +88,9 @@ export default function Unlock() {
           </Text>
         ) : null}
 
+        {/* KEYPAD */}
         <View className="w-full max-w-[320px]">
-          <View className="flex-row flex-wrap">
+          <View className="flex-row flex-wrap justify-between gap-y-3">
             {KEYS.map((k, i) => (
               <Pressable
                 key={i}
@@ -98,13 +99,13 @@ export default function Unlock() {
                   if (k === "⌫") removeDigit();
                   else addDigit(k);
                 }}
-                className="w-1/3 h-20 items-center justify-center"
+                className="w-[29%] aspect-square items-center justify-center"
                 style={({ pressed }) => ({
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
                 {k ? (
-                  <View className="h-16 w-16 rounded-full border border-gray-300 items-center justify-center">
+                  <View className="h-[76%] w-[76%] rounded-full border border-gray-300 items-center justify-center">
                     <Text className="text-2xl font-medium">
                       {k}
                     </Text>
@@ -117,7 +118,7 @@ export default function Unlock() {
 
         <Pressable
           onPress={onContinue}
-          className="mt-12 bg-black px-12 py-5 rounded-2xl"
+          className="mt-14 bg-black px-14 py-5 rounded-2xl"
           style={({ pressed }) => ({
             opacity: pressed ? 0.85 : 1,
             transform: [{ scale: pressed ? 0.98 : 1 }],
