@@ -1,4 +1,5 @@
 import { IncidentModal } from "@/components/incident/IncidentModal";
+import IncidentPatternInsight from "@/components/incident/IncidentPatternInsight";
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
 import { useIncidentStore } from "@/store/useIncidentStore";
@@ -123,6 +124,10 @@ export default function Timeline() {
                 {item.summary}
               </Text>
             )}
+
+            <IncidentPatternInsight
+              incidentId={item.id}
+            />
 
             <Pressable
               onPress={() => confirmDelete(item.id)}

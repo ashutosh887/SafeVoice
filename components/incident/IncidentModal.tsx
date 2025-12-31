@@ -4,6 +4,7 @@ import { Modal, Pressable, Text, View } from "react-native";
 import { IncidentAudioPlayer } from "./IncidentAudioPlayer";
 import { IncidentContextBanner } from "./IncidentContextBanner";
 import { IncidentDetails } from "./IncidentDetails";
+import IncidentPatternInsight from "./IncidentPatternInsight";
 import { IncidentProcessingGate } from "./IncidentProcessingGate";
 
 export function IncidentModal({
@@ -37,6 +38,9 @@ export function IncidentModal({
           <IncidentAudioPlayer audioUri={incident.audioUri} />
 
           <IncidentProcessingGate incident={incident}>
+            <IncidentPatternInsight
+              incidentId={incident.id}
+            />
             <IncidentContextBanner />
             <IncidentDetails incident={incident} />
           </IncidentProcessingGate>

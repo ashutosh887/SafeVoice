@@ -1,3 +1,7 @@
+import {
+  deriveIncidentInsights,
+  IncidentInsights,
+} from "@/lib/incidentInsights";
 import { IncidentRecord } from "@/types/incident";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
@@ -14,10 +18,15 @@ type IncidentState = {
   incidents: IncidentRecord[];
   patterns: Patterns;
   hydrated: boolean;
+
   hydrate: () => Promise<void>;
   addIncident: (i: IncidentRecord) => void;
   removeIncident: (id: string) => void;
   updateIncident: (i: IncidentRecord) => void;
+
+  getIncidentInsights: (
+    id: string
+  ) => IncidentInsights | null;
 };
 
 function computePatterns(
@@ -67,7 +76,9 @@ export const useIncidentStore = create<IncidentState>(
       const raw = await AsyncStorage.getItem(
         STORAGE_KEY
       );
-      const incidents = raw ? JSON.parse(raw) : [];
+      const incidents: IncidentRecord[] =
+        raw ? JSON.parse(raw) : [];
+
       set({
         incidents,
         patterns: computePatterns(incidents),
@@ -80,10 +91,12 @@ export const useIncidentStore = create<IncidentState>(
         incident,
         ...get().incidents,
       ];
+
       set({
         incidents,
         patterns: computePatterns(incidents),
       });
+
       AsyncStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(incidents)
@@ -94,10 +107,12 @@ export const useIncidentStore = create<IncidentState>(
       const incidents = get().incidents.filter(
         (i) => i.id !== id
       );
+
       set({
         incidents,
         patterns: computePatterns(incidents),
       });
+
       AsyncStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(incidents)
@@ -109,13 +124,29 @@ export const useIncidentStore = create<IncidentState>(
         (i) =>
           i.id === incident.id ? incident : i
       );
+
       set({
         incidents,
         patterns: computePatterns(incidents),
       });
+
       AsyncStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(incidents)
+      );
+    },
+
+    getIncidentInsights: (id) => {
+      const incidents = get().incidents;
+      const incident = incidents.find(
+        (i) => i.id === id
+      );
+
+      if (!incident) return null;
+
+      return deriveIncidentInsights(
+        incident,
+        incidents
       );
     },
   })
