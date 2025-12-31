@@ -16,10 +16,16 @@ type ListenState = "idle" | "listening" | "saved";
 export default function Listen() {
   const router = useRouter();
   const micGranted = useMicrophone();
-  const { startRecording, stopRecording, level } = useAudioRecorder();
-  const addIncident = useIncidentStore((s) => s.addIncident);
+  const { startRecording, stopRecording, level } =
+    useAudioRecorder();
 
-  const [state, setState] = useState<ListenState>("idle");
+  const createIncident = useIncidentStore(
+    (s) => s.createIncident
+  );
+
+  const [state, setState] =
+    useState<ListenState>("idle");
+
   const pressLockRef = useRef(false);
 
   const saveAndStop = async () => {
@@ -27,15 +33,36 @@ export default function Listen() {
     if (!uri) return;
 
     const incident: IncidentRecord = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`,
       createdAt: Date.now(),
       narrative: "Voice recording",
       audioUri: uri,
+
+      transcript: undefined,
+      summary: undefined,
+
       extracted: {},
       flags: {},
+
+      followUps: [],
+      crisis: {
+        detected: false,
+        keywords: [],
+      },
+      legal: {
+        completenessScore: 0,
+        missingCriticalInfo: [],
+      },
+      patterns: {
+        frequencyIncreasing: false,
+        riskLevel: "low",
+        reasons: [],
+      },
     };
 
-    addIncident(incident);
+    createIncident(incident);
     setState("saved");
   };
 
@@ -44,7 +71,9 @@ export default function Listen() {
     pressLockRef.current = true;
 
     try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await Haptics.impactAsync(
+        Haptics.ImpactFeedbackStyle.Light
+      );
 
       if (state === "idle" || state === "saved") {
         setState("listening");
@@ -79,7 +108,9 @@ export default function Listen() {
         <CircleInherit size="lg">
           <VoiceWave
             size="lg"
-            state={state === "saved" ? "stopped" : state}
+            state={
+              state === "saved" ? "stopped" : state
+            }
             level={level}
             onPress={handleWavePress}
           />
@@ -87,8 +118,10 @@ export default function Listen() {
 
         <Text className="mt-6 text-sm text-gray-500 text-center">
           {state === "idle" && "Tap to start recording"}
-          {state === "listening" && "Listening… tap to stop"}
-          {state === "saved" && "Saved · Tap to record again"}
+          {state === "listening" &&
+            "Listening… tap to stop"}
+          {state === "saved" &&
+            "Saved · Tap to record again"}
         </Text>
 
         <Pressable
@@ -96,9 +129,11 @@ export default function Listen() {
             await Haptics.impactAsync(
               Haptics.ImpactFeedbackStyle.Medium
             );
+
             if (state === "listening") {
               await saveAndStop();
             }
+
             router.replace("/session/end");
           }}
           className="bg-black px-6 py-3 rounded-xl w-[200px] mt-12"

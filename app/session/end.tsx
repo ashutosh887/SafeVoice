@@ -1,8 +1,6 @@
 import CircleInherit from "@/components/CircleInherit";
 import QuickExit from "@/components/QuickExit";
 import SafeScreen from "@/components/SafeScreen";
-import { extractIncidentFromTranscript } from "@/services/extractIncident";
-import { transcribeAudio } from "@/services/transcribe";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import { useRouter } from "expo-router";
 import { Check } from "lucide-react-native";
@@ -20,51 +18,26 @@ export default function EndSession() {
   const updateIncident = useIncidentStore(
     (s) => s.updateIncident
   );
+
   const [exiting, setExiting] = useState(false);
-
-  const tryEnrichLatest = async () => {
-    const latest = incidents[0];
-    if (!latest || latest.transcript) return;
-
-    try {
-      const transcript = await transcribeAudio(
-        latest.audioUri
-      );
-
-      const base = {
-        ...latest,
-        transcript,
-      };
-
-      updateIncident(base);
-
-      const enrichment =
-        await extractIncidentFromTranscript(
-          transcript
-        );
-
-      if (enrichment) {
-        updateIncident({
-          ...base,
-          ...enrichment,
-        });
-      }
-    } catch {}
-  };
 
   const handleExit = async () => {
     if (exiting) return;
-
     setExiting(true);
 
-    const enrichPromise = tryEnrichLatest();
+    const latest = incidents[0];
 
-    await Promise.race([
-      enrichPromise,
-      new Promise((res) =>
-        setTimeout(res, 900)
-      ),
-    ]);
+    if (latest && !latest.transcript) {
+      updateIncident(latest.id, {
+        flags: {
+          ...latest.flags,
+        },
+      });
+    }
+
+    await new Promise((res) =>
+      setTimeout(res, 400)
+    );
 
     router.replace("/witness/home");
   };
