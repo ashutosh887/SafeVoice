@@ -1,3 +1,4 @@
+import { DATADOG_EVENTS } from "@/constants/datadog";
 import { logEvent } from "@/lib/observability";
 import { IncidentRecord } from "@/types/incident";
 
@@ -46,7 +47,7 @@ export async function getGeminiInsights(
   const startedAt = Date.now();
 
   logEvent({
-    event: "gemini.insights.start",
+    event: DATADOG_EVENTS.GEMINI_INSIGHTS_START,
     incidentId: incident.id,
     payload: {
       model: MODEL,
@@ -81,7 +82,7 @@ export async function getGeminiInsights(
 
     if (!res.ok) {
       logEvent({
-        event: "gemini.insights.error",
+        event: DATADOG_EVENTS.GEMINI_INSIGHTS_ERROR,
         incidentId: incident.id,
         payload: {
           model: MODEL,
@@ -98,7 +99,7 @@ export async function getGeminiInsights(
 
     if (!text) {
       logEvent({
-        event: "gemini.insights.empty",
+        event: DATADOG_EVENTS.GEMINI_INSIGHTS_EMPTY,
         incidentId: incident.id,
         payload: {
           model: MODEL,
@@ -113,7 +114,7 @@ export async function getGeminiInsights(
     );
 
     logEvent({
-      event: "gemini.insights.success",
+      event: DATADOG_EVENTS.GEMINI_INSIGHTS_SUCCESS,
       incidentId: incident.id,
       payload: {
         model: MODEL,
@@ -124,7 +125,7 @@ export async function getGeminiInsights(
     return parsed;
   } catch (error: any) {
     logEvent({
-      event: "gemini.insights.exception",
+      event: DATADOG_EVENTS.GEMINI_INSIGHTS_EXCEPTION,
       incidentId: incident.id,
       payload: {
         model: MODEL,

@@ -11,6 +11,7 @@ import { logEvent } from "@/lib/observability";
 import { computeRisk } from "@/lib/riskEngine";
 import { generateSafetyPlan } from "@/lib/safetyPlanEngine";
 
+import { DATADOG_EVENTS } from "@/constants/datadog";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -40,7 +41,7 @@ export function IncidentProcessingGate({
       const startTs = Date.now();
 
       logEvent({
-        event: "pipeline.start",
+        event: DATADOG_EVENTS.PIPELINE_START,
         incidentId: incident.id,
         payload: {
           reprocessing: !!incident.needsReprocessing,
@@ -59,7 +60,7 @@ export function IncidentProcessingGate({
 
       if (!latest.audioTranscript) {
         logEvent({
-          event: "pipeline.transcription.start",
+          event: DATADOG_EVENTS.TRANSCRIPTION_START,
           incidentId: incident.id,
         });
 
@@ -71,7 +72,7 @@ export function IncidentProcessingGate({
         updateIncident(latest.id, { audioTranscript });
 
         logEvent({
-          event: "pipeline.transcription.done",
+          event: DATADOG_EVENTS.TRANSCRIPTION_SUCCESS,
           incidentId: incident.id,
         });
       }
@@ -86,7 +87,7 @@ export function IncidentProcessingGate({
       updateIncident(latest.id, { combinedNarrative });
 
       logEvent({
-        event: "pipeline.extraction.start",
+        event: DATADOG_EVENTS.EXTRACTION_GEMINI_START,
         incidentId: incident.id,
       });
 
@@ -98,7 +99,7 @@ export function IncidentProcessingGate({
 
       if (!enrichment) {
         logEvent({
-          event: "pipeline.extraction.failed",
+          event: DATADOG_EVENTS.EXTRACTION_GEMINI_ERROR,
           incidentId: incident.id,
         });
         setProcessing(false);
@@ -108,7 +109,7 @@ export function IncidentProcessingGate({
       updateIncident(latest.id, enrichment);
 
       logEvent({
-        event: "pipeline.extraction.done",
+        event: DATADOG_EVENTS.EXTRACTION_GEMINI_SUCCESS,
         incidentId: incident.id,
       });
 
@@ -154,7 +155,7 @@ export function IncidentProcessingGate({
       latest = getLatest();
 
       logEvent({
-        event: "pipeline.gemini_insights.start",
+        event: DATADOG_EVENTS.GEMINI_INSIGHTS_START,
         incidentId: incident.id,
       });
 
@@ -169,7 +170,7 @@ export function IncidentProcessingGate({
       }
 
       logEvent({
-        event: "pipeline.complete",
+        event: DATADOG_EVENTS.PIPELINE_COMPLETE,
         incidentId: incident.id,
         payload: {
           latencyMs: Date.now() - startTs,

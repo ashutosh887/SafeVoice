@@ -1,3 +1,4 @@
+import { DATADOG_EVENTS } from "@/constants/datadog";
 import { logEvent } from "@/lib/observability";
 import { IncidentRecord } from "@/types/incident";
 
@@ -100,7 +101,7 @@ async function extractWithGemini(
   const startedAt = Date.now();
 
   logEvent({
-    event: "extraction.gemini.start",
+    event: DATADOG_EVENTS.EXTRACTION_GEMINI_START,
     incidentId,
     payload: { model: GEMINI_MODEL },
   });
@@ -133,7 +134,7 @@ async function extractWithGemini(
 
     if (!res.ok) {
       logEvent({
-        event: "extraction.gemini.error",
+        event: DATADOG_EVENTS.EXTRACTION_GEMINI_ERROR,
         incidentId,
         payload: {
           status: res.status,
@@ -149,7 +150,7 @@ async function extractWithGemini(
 
     if (!text) {
       logEvent({
-        event: "extraction.gemini.empty",
+        event: DATADOG_EVENTS.EXTRACTION_GEMINI_TEXT_EMPTY,
         incidentId,
         payload: { latencyMs },
       });
@@ -159,7 +160,7 @@ async function extractWithGemini(
     const parsed = safeJsonParse(text);
     if (!parsed) {
       logEvent({
-        event: "extraction.gemini.parse_failed",
+        event: DATADOG_EVENTS.EXTRACTION_GEMINI_PARSE_FAILED,
         incidentId,
         payload: { latencyMs },
       });
@@ -167,7 +168,7 @@ async function extractWithGemini(
     }
 
     logEvent({
-      event: "extraction.gemini.success",
+      event: DATADOG_EVENTS.EXTRACTION_GEMINI_SUCCESS,
       incidentId,
       payload: { latencyMs },
     });
@@ -175,7 +176,7 @@ async function extractWithGemini(
     return parsed;
   } catch (e: any) {
     logEvent({
-      event: "extraction.gemini.exception",
+      event: DATADOG_EVENTS.EXTRACTION_GEMINI_EXCEPTION,
       incidentId,
       payload: { message: e?.message },
     });
@@ -190,7 +191,7 @@ async function extractWithOpenAI(
   const startedAt = Date.now();
 
   logEvent({
-    event: "extraction.openai.start",
+    event: DATADOG_EVENTS.EXTRACTION_OPENAI_START,
     incidentId,
     payload: { model: OPENAI_MODEL },
   });
@@ -226,7 +227,7 @@ async function extractWithOpenAI(
 
     if (!res.ok) {
       logEvent({
-        event: "extraction.openai.error",
+        event: DATADOG_EVENTS.EXTRACTION_OPENAI_ERROR,
         incidentId,
         payload: {
           status: res.status,
@@ -241,7 +242,7 @@ async function extractWithOpenAI(
 
     if (!text) {
       logEvent({
-        event: "extraction.openai.empty",
+        event: DATADOG_EVENTS.EXTRACTION_OPENAI_EMPTY,
         incidentId,
         payload: { latencyMs },
       });
@@ -251,7 +252,7 @@ async function extractWithOpenAI(
     const parsed = safeJsonParse(text);
     if (!parsed) {
       logEvent({
-        event: "extraction.openai.parse_failed",
+        event: DATADOG_EVENTS.EXTRACTION_OPENAI_PARSE_FAILED,
         incidentId,
         payload: { latencyMs },
       });
@@ -259,7 +260,7 @@ async function extractWithOpenAI(
     }
 
     logEvent({
-      event: "extraction.openai.success",
+      event: DATADOG_EVENTS.EXTRACTION_OPENAI_SUCCESS,
       incidentId,
       payload: { latencyMs },
     });
@@ -267,7 +268,7 @@ async function extractWithOpenAI(
     return parsed;
   } catch (e: any) {
     logEvent({
-      event: "extraction.openai.exception",
+      event: DATADOG_EVENTS.EXTRACTION_OPENAI_EXCEPTION,
       incidentId,
       payload: { message: e?.message },
     });

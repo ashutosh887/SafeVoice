@@ -1,3 +1,4 @@
+import { DATADOG_EVENTS } from "@/constants/datadog";
 import { logEvent } from "@/lib/observability";
 
 export async function transcribeAudio(
@@ -7,7 +8,7 @@ export async function transcribeAudio(
   const startTs = Date.now();
 
   logEvent({
-    event: "transcription.start",
+    event: DATADOG_EVENTS.TRANSCRIPTION_START,
     incidentId,
   });
 
@@ -42,7 +43,7 @@ export async function transcribeAudio(
 
     if (!res.ok) {
       logEvent({
-        event: "transcription.error",
+        event: DATADOG_EVENTS.TRANSCRIPTION_ERROR,
         incidentId,
         payload: { status: res.status, latencyMs },
       });
@@ -52,7 +53,7 @@ export async function transcribeAudio(
     const json = await res.json();
 
     logEvent({
-      event: "transcription.success",
+      event: DATADOG_EVENTS.TRANSCRIPTION_SUCCESS,
       incidentId,
       payload: { latencyMs },
     });
@@ -60,7 +61,7 @@ export async function transcribeAudio(
     return json.text ?? "";
   } catch (e: any) {
     logEvent({
-      event: "transcription.exception",
+      event: DATADOG_EVENTS.TRANSCRIPTION_EXCEPTION,
       incidentId,
       payload: { message: e?.message },
     });
