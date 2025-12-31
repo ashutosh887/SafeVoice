@@ -2,16 +2,23 @@ export type RiskLevel = "low" | "medium" | "high";
 
 export type CrisisState = {
   detected: boolean;
-  keywords?: string[];
-  detectedAt?: number;
+  reason: string;
+  detectedAt: number;
+  acknowledged?: boolean;
   resolvedAt?: number;
-  resolutionNote?: string;
+  resolutionAction?: "called_help" | "dismissed";
 };
 
-export type FollowUp = {
+export type FollowUpQuestion = {
+  id: string;
   question: string;
+  answered?: boolean;
+};
+
+export type FollowUpAnswer = {
+  questionId: string;
   answer: string;
-  askedAt: number;
+  answeredAt: number;
 };
 
 export type IncidentRecord = {
@@ -21,29 +28,34 @@ export type IncidentRecord = {
   narrative: string;
   audioUri: string;
 
-  transcript?: string;
+  audioTranscript?: string;
+  userAdditions?: string[];
+  combinedNarrative?: string;
+
   summary?: string;
 
   extracted: {
-    time?: string;
-    location?: string;
-    actions?: string[];
-    witnesses?: string[];
-    childrenPresent?: boolean;
-    priorIncidents?: boolean;
+    time?: string | null;
+    location?: string | null;
+    actions?: string[] | null;
+    witnesses?: string[] | null;
+    childrenPresent?: boolean | null;
+    priorIncidents?: boolean | null;
   };
 
   flags: {
-    escalation?: boolean;
-    imminentRisk?: boolean;
+    escalation?: boolean | null;
+    imminentRisk?: boolean | null;
   };
 
-  followUps?: FollowUp[];
+  followUpSession?: {
+    active: boolean;
+    questions: FollowUpQuestion[];
+    answers: FollowUpAnswer[];
+    startedAt: number;
+  };
+
   crisis?: CrisisState;
-
-  intervention?: {
-    started: boolean;
-  };
 
   legal?: {
     completenessScore: number;
@@ -55,4 +67,16 @@ export type IncidentRecord = {
     riskLevel: RiskLevel;
     reasons: string[];
   };
+
+  safetyPlan?: {
+    id: string;
+    label: string;
+  }[];
+
+  aiInsights?: {
+    patternSummary: string;
+    riskExplanation: string;
+  };
+
+  needsReprocessing?: boolean;
 };

@@ -1,6 +1,16 @@
+import { logEvent } from "@/lib/observability";
+
 export async function transcribeAudio(
-  uri: string
+  uri: string,
+  incidentId?: string
 ): Promise<string> {
+  const startTs = Date.now();
+
+  logEvent({
+    event: "transcription.start",
+    incidentId,
+  });
+
   const formData = new FormData();
 
   formData.append("file", {
@@ -10,23 +20,50 @@ export async function transcribeAudio(
   } as any);
 
   formData.append("model", "whisper-1");
-
-  const res = await fetch(
-    "https://api.openai.com/v1/audio/transcriptions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_KEY}`,
-        "Content-Type": "multipart/form-data",
-      },
-      body: formData,
-    }
+  formData.append("language", "en");
+  formData.append(
+    "prompt",
+    "This is an English narration of an incident. Transcribe in English only."
   );
 
-  if (!res.ok) {
-    throw new Error("Transcription failed");
-  }
+  try {
+    const res = await fetch(
+      "https://api.openai.com/v1/audio/transcriptions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENAI_KEY}`,
+        },
+        body: formData,
+      }
+    );
 
-  const json = await res.json();
-  return json.text ?? "";
+    const latencyMs = Date.now() - startTs;
+
+    if (!res.ok) {
+      logEvent({
+        event: "transcription.error",
+        incidentId,
+        payload: { status: res.status, latencyMs },
+      });
+      throw new Error("Transcription failed");
+    }
+
+    const json = await res.json();
+
+    logEvent({
+      event: "transcription.success",
+      incidentId,
+      payload: { latencyMs },
+    });
+
+    return json.text ?? "";
+  } catch (e: any) {
+    logEvent({
+      event: "transcription.exception",
+      incidentId,
+      payload: { message: e?.message },
+    });
+    throw e;
+  }
 }
