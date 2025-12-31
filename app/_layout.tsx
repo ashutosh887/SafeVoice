@@ -21,7 +21,6 @@ export default function RootLayout() {
         <Stack.Screen name="session/start" />
         <Stack.Screen name="session/listen" />
         <Stack.Screen name="session/end" />
-        <Stack.Screen name="witness/prepare" />
       </Stack>
       <StatusBar style="dark" />
     </ThemeProvider>
