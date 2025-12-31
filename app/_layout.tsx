@@ -1,9 +1,12 @@
 import "@/global.css";
 import { useIncidentStore } from "@/store/useIncidentStore";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { Buffer } from "buffer";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+
+global.Buffer = Buffer;
 
 export default function RootLayout() {
   const hydrate = useIncidentStore((s) => s.hydrate);
