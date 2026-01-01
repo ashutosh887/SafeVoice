@@ -133,8 +133,12 @@ SafeVoice lowers the barrier to justice by:
 - Turning lived experiences into usable evidence
 - Helping victims prepare for legal or support systems without replacing them
 
-## Demo
+## 🎥 Demo Video
 
-A screen recording demonstrating the full flow — from decoy meditation UI to secure evidence documentation — is included with this submission.
-
-Built with empathy, privacy, and real-world safety in mind.
+<a href="https://www.youtube.com/watch?v=Y98gE-eW06o" target="_blank">
+  <img
+    src="https://img.youtube.com/vi/Y98gE-eW06o/hqdefault.jpg"
+    alt="SafeVoice Demo Video"
+    width="480"
+  />
+</a>
