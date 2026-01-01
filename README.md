@@ -108,19 +108,19 @@ Support screen offering reassurance and next-step guidance without forcing actio
 
 ## Technology Used
 
-- ElevenLabs  
+- [ElevenLabs](https://elevenlabs.io)  
   Used for empathetic voice interaction, incident documentation, and the guided meditation agent.
 
-- Google Gemini  
+- [Google Gemini](https://deepmind.google/technologies/gemini/)  
   Used for AI reasoning, narrative understanding, follow-up generation, evidence structuring, and pattern detection.
 
-- Google Cloud  
+- [Google Cloud](https://cloud.google.com)  
   Used for secure, encrypted processing and storage of sensitive data.
 
-- Confluent  
+- [Confluent](https://www.confluent.io)  
   Used for real-time event streaming to analyze incident patterns and detect escalation or crisis signals.
 
-- Datadog  
+- [Datadog](https://www.datadoghq.com)  
   Used for system observability, reliability monitoring, and risk signal tracking.
 
 Each technology supports safety, reliability, and intelligence — not vanity features.
